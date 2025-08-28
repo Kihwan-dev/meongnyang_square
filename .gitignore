@@ -45,4 +45,9 @@ app.*.map.json
 /android/app/release
 
 # .env file 업로드 제외
-assets/config/.env
+#assets/config/.env
+
+# Flutter generated plugin files
+**/GeneratedPluginRegistrant.*
+**/generated_plugin_registrant.*
+**/generated_plugins.cmake

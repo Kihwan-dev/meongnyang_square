@@ -13,7 +13,7 @@ class FeedBottom extends StatelessWidget {
         GestureDetector(
           onTap: () {
             //write페이지로 이동!
-            // Navigator.of(context).push(MaterialPageRoute(builder: (context) => WritePage()));
+            Navigator.of(context).push(MaterialPageRoute(builder: (context) => WritePage()));
           },
           child: Container(
             padding: EdgeInsets.all(12),

@@ -1,5 +1,5 @@
-class Feed {
-  Feed({
+class FeedDto {
+  FeedDto({
     required this.id,
     required this.createdAt,
     required this.tag,
@@ -13,7 +13,7 @@ class Feed {
   final String? content;
   final String? imagePath;
 
-  Feed.fromJson(Map<String, dynamic> map)
+  FeedDto.fromJson(Map<String, dynamic> map)
       : this(
           id: map["id"] ?? "",
           createdAt: DateTime.parse(map["createdAt"] ?? ""),

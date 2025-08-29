@@ -11,9 +11,9 @@ class FeedRemoteDataSourceImpl implements FeedRemoteDataSource {
   }) async {
     try {
       final collection = firestore.collection("feeds");
-      final doc = collection.doc();
+      final doc = id == null ? collection.doc() : collection.doc(id);
       await doc.set({
-        "id": id ?? doc.id,
+        "id": doc.id,
         "createdAt": DateTime.now().toIso8601String(),
         "tag": dto.tag,
         "content": dto.content,

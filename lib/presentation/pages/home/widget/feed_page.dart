@@ -37,7 +37,7 @@ class _FeedPageState extends State<FeedPage> {
     isSwiping = true;
 
     if (page == 0) {
-      // await Navigator.of(context).push(MaterialPageRoute(builder: (context) => WritePage()));
+      await Navigator.of(context).push(MaterialPageRoute(builder: (context) => WritePage()));
     } else if (page == 2) {
       await Navigator.of(
         context,

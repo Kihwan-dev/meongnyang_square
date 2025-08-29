@@ -38,8 +38,16 @@ class _CommentPageState extends State<CommentPage> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
+        leading: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: IconButton(
+              icon: Image.asset('assets/images/icon_back.png',
+              ),
+              onPressed: () => Navigator.of(context).maybePop(),
+            ),
+          ),
         centerTitle: true,
-        title: Image.asset("assets/images/logo_s.png"),
+        title: Image.asset('assets/images/logo_s.png', width: 40, height: 20),
       ),
       body: _getScreen(context, bottomInset),
     );
@@ -131,8 +139,8 @@ class _CommentPageState extends State<CommentPage> {
                         // 코멘트 달기
                       },
                       child: Container(
-                        height: 50,
-                        width: 50,
+                        height: 48,
+                        width: 48,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(25),
                           color: Color(0xFF9ABC85),
@@ -191,7 +199,7 @@ class _CommentPageState extends State<CommentPage> {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 18,
+                        fontSize: 16,
                         height: 1.3,
                       ),
                     ),
@@ -205,7 +213,6 @@ class _CommentPageState extends State<CommentPage> {
                       textAlign: TextAlign.end,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.7),
-                        fontSize: 14,
                       ),
                     ),
                   ),

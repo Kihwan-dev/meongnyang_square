@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:meongnyang_square/presentation/pages/splash/splash_widgets/login_join_form.dart';
+import 'package:meongnyang_square/presentation/pages/splash/splash_widgets/auth_form.dart';
 
+//스플래시 화면
 class SplashPage extends StatefulWidget {
   @override
   State<SplashPage> createState() => _SplashPageState();
@@ -67,7 +68,7 @@ class _SplashPageState extends State<SplashPage>
         FocusScope.of(context).unfocus();
       },
       child: Scaffold(
-        body: Center(
+        body: SafeArea(
           child: AnimatedBuilder(
             animation: _controller,
             builder: (context, _) {
@@ -92,13 +93,13 @@ class _SplashPageState extends State<SplashPage>
                       ),
                     ),
                   ),
-      
+              
                   //로그인폼:페이드인
                   Opacity(
                     opacity: _loginFade.value,
                     child: IgnorePointer(
                       ignoring: _loginFade.value < 0.99, // 거의 다 보일 때부터 터치 허용
-                      child: LoginjoinForm(),
+                      child: AuthForm(),
                     ),
                   ),
                 ],

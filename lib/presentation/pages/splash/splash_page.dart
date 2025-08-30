@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:meongnyang_square/presentation/pages/splash/splash_widgets/auth_form.dart';
 
+//스플래시 화면
 class SplashPage extends StatefulWidget {
   @override
   State<SplashPage> createState() => _SplashPageState();
@@ -61,78 +63,50 @@ class _SplashPageState extends State<SplashPage>
 
   @override
   Widget build(BuildContext context) {
-    // 테마 컬러 (#9ABC85)
-    return Scaffold(
-      body: Center(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, _) {
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: Transform.translate(
-                    offset: Offset(0, _translateY.value),
-                    child: ScaleTransition(
-                      scale: _scaleAnimation,
-                      child: Column(
-                        children: [
-                          //로고 이미지
-                          Image.asset(
-                            'assets/images/logo.png',
-                            width: 200,
-                            height: 200,
-                          ),
-                        ],
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, _) {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: Transform.translate(
+                      offset: Offset(0, _translateY.value),
+                      child: ScaleTransition(
+                        scale: _scaleAnimation,
+                        child: Column(
+                          children: [
+                            //로고 이미지
+                            Image.asset(
+                              'assets/images/logo.png',
+                              width: 116,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-
-                //구글 로그인 버튼: 페이드 인
-                Opacity(
-                  opacity: _loginFade.value,
-                  child: IgnorePointer(
-                    ignoring: _loginFade.value < 0.99, // 거의 다 보일 때부터 터치 허용
-                    child: _GoogleLoginButton(),
+              
+                  //로그인폼:페이드인
+                  Opacity(
+                    opacity: _loginFade.value,
+                    child: IgnorePointer(
+                      ignoring: _loginFade.value < 0.99, // 거의 다 보일 때부터 터치 허용
+                      child: AuthForm(),
+                    ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
-      ),
-    );
-  }
-}
-
-// 구글 로그인 버튼
-class _GoogleLoginButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.white,
-        side: BorderSide(color: Colors.grey, width: 1),
-        padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-      onPressed: () {},
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Image.asset(
-            "assets/images/googlelogo.png",
-            width: 28,
-            height: 28,
-          ),
-          SizedBox(width: 12),
-          Text(
-            "Sign in with Google",
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w300),
-          ),
-        ],
       ),
     );
   }

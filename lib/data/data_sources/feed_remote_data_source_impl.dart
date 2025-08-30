@@ -15,9 +15,9 @@ class FeedRemoteDataSourceImpl implements FeedRemoteDataSource {
       await doc.set({
         "id": doc.id,
         "createdAt": DateTime.now().toIso8601String(),
-        "tag": dto.tag,
-        "content": dto.content,
-        "imagePath": dto.imagePath,
+        "tag": dto.tag ?? "",
+        "content": dto.content ?? "",
+        "imagePath": dto.imagePath ?? "",
       });
 
       return true;

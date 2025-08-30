@@ -5,19 +5,16 @@ import 'package:meongnyang_square/data/dtos/feed_dto.dart';
 class FeedRemoteDataSourceImpl implements FeedRemoteDataSource {
   final firestore = FirebaseFirestore.instance;
   @override
-  Future<bool> upsertFeed({
-    required FeedDto dto,
-    String? id,
-  }) async {
+  Future<bool> upsertFeed(FeedDto dto) async {
     try {
       final collection = firestore.collection("feeds");
-      final doc = id == null ? collection.doc() : collection.doc(id);
+      final doc = dto.id == null ? collection.doc() : collection.doc(dto.id);
       await doc.set({
         "id": doc.id,
         "createdAt": DateTime.now().toIso8601String(),
-        "tag": dto.tag,
-        "content": dto.content,
-        "imagePath": dto.imagePath,
+        "tag": dto.tag ?? "",
+        "content": dto.content ?? "",
+        "imagePath": dto.imagePath ?? "",
       });
 
       return true;

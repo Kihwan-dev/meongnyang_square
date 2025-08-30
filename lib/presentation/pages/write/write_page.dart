@@ -32,22 +32,19 @@ class _WritePageState extends State<WritePage> {
         appBar: AppBar(
           backgroundColor: Colors.black,
           elevation: 0,
-          leading: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: IconButton(
-              icon: Image.asset('assets/images/icon_back.png',
-              ),
-              onPressed: () => Navigator.of(context).maybePop(),
-            ),
-          ),
           centerTitle: true,
           title: Image.asset('assets/images/logo_s.png', width: 40, height: 20),
           actions: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: IconButton(
-                icon: Image.asset('assets/images/icon_pencil.png',),
-                onPressed: () {},
+            GestureDetector(
+              onTap: () {},
+              child: Container(
+                width: 50,
+                height: 50,
+                child: Icon(
+                  Icons.edit,
+                  color: Colors.white,
+                  size: 25,
+                ),
               ),
             ),
           ],

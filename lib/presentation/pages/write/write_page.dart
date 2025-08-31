@@ -1,11 +1,16 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:meongnyang_square/domain/entities/feed.dart';
 import 'package:meongnyang_square/presentation/pages/write/write_widgets/cropper_widget.dart';
 import 'write_widgets/write_widget.dart';
 
 class WritePage extends StatefulWidget {
+  const WritePage(this.feed);
+  final Feed? feed;
+
   @override
   State<WritePage> createState() => _WritePageState();
 }
@@ -19,6 +24,11 @@ class _WritePageState extends State<WritePage> {
   final _picker = ImagePicker();
 
   Uint8List? _croppedImage;
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -86,16 +96,24 @@ class _WritePageState extends State<WritePage> {
                               borderRadius: BorderRadius.circular(16),
                             ),
                             alignment: Alignment.center,
-                            child: _croppedImage == null
-                                ? Image.asset(
-                                    'assets/images/icon_photo.png',
-                                    width: 35,
-                                    height: 35,
-                                  )
-                                : Image.memory(
+                            child: _croppedImage != null
+                                ? Image.memory(
                                     _croppedImage!,
                                     fit: BoxFit.cover,
-                                  ),
+                                  )
+                                : widget.feed == null
+                                    ? Image.asset(
+                                        'assets/images/icon_photo.png',
+                                        width: 35,
+                                        height: 35,
+                                      )
+                                    : CachedNetworkImage(
+                                        imageUrl: widget.feed!.imagePath,
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) => Center(
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        ),
+                                      ),
                           ),
                         ),
                       ),

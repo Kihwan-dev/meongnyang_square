@@ -1,12 +1,16 @@
+import 'dart:typed_data';
+
 import 'package:meongnyang_square/data/data_sources/feed_remote_data_source.dart';
+import 'package:meongnyang_square/data/data_sources/storage_data_source.dart';
 import 'package:meongnyang_square/data/dtos/feed_dto.dart';
 import 'package:meongnyang_square/domain/repositories/feed_repository.dart';
 import 'package:meongnyang_square/domain/use_cases/feed_params.dart';
 
 // 핵심은 DataSource를 받아와서 DataSource내부의 함수를 사용한다는 것!
 class FeedRepositoryImpl implements FeedRepository {
-  FeedRepositoryImpl(this._feedRemoteDataSource);
+  FeedRepositoryImpl(this._feedRemoteDataSource, this._storageDataSource);
   final FeedRemoteDataSource _feedRemoteDataSource;
+  final StorageDataSource _storageDataSource;
 
   @override
   Future<void> upsertFeed(FeedParams feedParams) async {
@@ -22,5 +26,11 @@ class FeedRepositoryImpl implements FeedRepository {
     if (!result) {
       throw Exception("Firebase에 피드 저장 실패");
     }
+  }
+
+  @override
+  Future<String> uploadFeedImage(Uint8List imageData) async {
+    final fileName = "feed_${DateTime.now().millisecondsSinceEpoch}.jpg";
+    return await _storageDataSource.uploadImage(imageData, fileName);
   }
 }

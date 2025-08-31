@@ -19,10 +19,7 @@ class TagAndContentCard extends StatelessWidget {
       height: double.infinity,
       decoration: const BoxDecoration(
         color: Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Stack(
         fit: StackFit.expand,

@@ -65,4 +65,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'meongnyang-square.firebasestorage.app',
     iosBundleId: 'com.example.meongnyangSquare',
   );
+
 }

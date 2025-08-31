@@ -1,9 +1,13 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meongnyang_square/presentation/pages/write/write_widgets/cropper_widget.dart';
 import 'write_widgets/write_widget.dart';
+
+import 'package:meongnyang_square/data/dtos/feed_dto.dart';
+import 'package:meongnyang_square/data/data_sources/feed_remote_data_source_impl.dart';
 
 class WritePage extends StatefulWidget {
   @override
@@ -19,6 +23,14 @@ class _WritePageState extends State<WritePage> {
   final _picker = ImagePicker();
 
   Uint8List? _croppedImage;
+  bool _isSubmitting = false;
+
+  void _showSnack(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
 
   @override
   void dispose() {
@@ -30,9 +42,7 @@ class _WritePageState extends State<WritePage> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-      },
+      onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
@@ -41,17 +51,19 @@ class _WritePageState extends State<WritePage> {
           centerTitle: true,
           title: Image.asset('assets/images/logo_s.png', width: 40, height: 20),
           actions: [
-            GestureDetector(
-              onTap: () {},
-              child: Container(
-                width: 50,
-                height: 50,
-                child: Icon(
-                  Icons.edit,
-                  color: Colors.white,
-                  size: 25,
-                ),
-              ),
+            IconButton(
+              onPressed: _isSubmitting ? null : _submit,
+              icon: _isSubmitting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Icon(Icons.edit, color: Colors.white, size: 24),
+              tooltip: '등록',
+              splashRadius: 24,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
             ),
           ],
         ),
@@ -82,7 +94,7 @@ class _WritePageState extends State<WritePage> {
                             width: 120,
                             height: 120,
                             decoration: BoxDecoration(
-                              color: Color(0xFF1E1E1E),
+                              color: const Color(0xFF1E1E1E),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             alignment: Alignment.center,
@@ -131,6 +143,84 @@ class _WritePageState extends State<WritePage> {
         ),
       ),
     );
+  }
+
+  Future<void> _submit() async {
+    FocusScope.of(context).unfocus();
+    if (_isSubmitting) return; // 중복 제출 방지
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      // 0) 입력 검증
+      final String tag = tagController.text.trim();
+      final String content = contentController.text.trim();
+
+      if (content.isEmpty) {
+        _showSnack('내용을 입력해 주세요.');
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+        } else {
+          _isSubmitting = false;
+        }
+        return;
+      }
+      if (content.length > maximumLength) {
+        _showSnack('내용은 최대 $maximumLength자까지 입력할 수 있습니다.');
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+        } else {
+          _isSubmitting = false;
+        }
+        return;
+      }
+
+      // 1) 이미지가 있다면 임시 파일로 저장해 업로드 경로를 확보 (DataSource가 업로드 후 URL로 치환)
+      String? imagePath;
+      if (_croppedImage != null) {
+        final dir = await Directory.systemTemp.createTemp('mn_feed_');
+        final file = File('${dir.path}/feed_${DateTime.now().millisecondsSinceEpoch}.jpg');
+        await file.writeAsBytes(_croppedImage!, flush: true);
+        imagePath = file.path; // 로컬 경로 전달 → DataSource에서 Storage 업로드
+      }
+
+      // 2) DTO 구성
+      final dto = FeedDto(
+        id: null,              // 새 문서 → DataSource에서 id 세팅
+        createdAt: null,       // 서버 타임스탬프 사용
+        tag: tag,
+        content: content,
+        imagePath: imagePath,  // 없으면 null 저장
+      );
+
+      // 3) 저장 실행 (타임아웃 방지)
+      final feedRemoteDataSource = FeedRemoteDataSourceImpl();
+      final bool isSaved = await feedRemoteDataSource
+          .upsertFeed(dto)
+          .timeout(const Duration(seconds: 20), onTimeout: () => false);
+
+      if (!isSaved) {
+        throw Exception('업로드 또는 저장에 실패했습니다.');
+      }
+
+      if (!mounted) return;
+      // 4) 성공 처리: 현재 페이지에서 안내 후 닫기
+      _showSnack('게시글이 저장되었습니다.');
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      _showSnack('등록 실패: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      } else {
+        _isSubmitting = false;
+      }
+    }
   }
 
   Future<dynamic> _showImagePickerSheet(BuildContext context) {
@@ -186,7 +276,7 @@ class _WritePageState extends State<WritePage> {
         _croppedImage = croppedImage;
       });
     } catch (e) {
-      print(e);
+      debugPrint('pickImage error: $e');
     }
   }
 }

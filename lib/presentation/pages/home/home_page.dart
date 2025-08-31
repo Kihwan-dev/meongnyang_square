@@ -31,7 +31,13 @@ class _HomePageState extends State<HomePage> {
       body: AnimatedBuilder(
         animation: _viewModel, 
         builder: (context, _) {
-          return FeedPage(feeds: _viewModel.feeds);
+          return FeedPage(
+            feeds: _viewModel.feeds,
+            onEndReached: _viewModel.loadMore,
+            isLoadingMore: _viewModel.isLoadingMore,
+            hasMore: _viewModel.hasMore,
+            onRefresh: _viewModel.refresh,
+          );
         },
       ),
     );

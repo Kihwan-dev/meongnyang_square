@@ -34,9 +34,9 @@ class WriteState {
   }
 }
 
-class WriteViewModel extends AutoDisposeFamilyNotifier<WriteState, Feed> {
+class WriteViewModel extends AutoDisposeFamilyNotifier<WriteState, Feed?> {
   @override
-  WriteState build(Feed arg) {
+  WriteState build(Feed? arg) {
     return WriteState(
       imageData: null,
       isLoading: false,
@@ -62,14 +62,14 @@ class WriteViewModel extends AutoDisposeFamilyNotifier<WriteState, Feed> {
     state = state.copyWith(isLoading: true);
 
     try {
-      String imagePath = arg.imagePath;
+      String imagePath = arg!.imagePath;
 
       if (state.imageData != null) {
         imagePath = await ref.read(uploadImageUseCaseProvider).execute(state.imageData!);
       }
 
       final feedParams = FeedParams(
-        id: arg.id,
+        id: arg!.id,
         tag: tag.trim(),
         content: content.trim(),
         imagePath: imagePath,

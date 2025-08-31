@@ -6,10 +6,12 @@ import 'package:meongnyang_square/data/data_sources/feed_remote_data_source_impl
 import 'package:meongnyang_square/data/data_sources/storage_data_source_impl.dart';
 import 'package:meongnyang_square/data/repositories/auth_repository_impl.dart';
 import 'package:meongnyang_square/data/repositories/feed_repository_impl.dart';
+import 'package:meongnyang_square/domain/entities/feed.dart';
 import 'package:meongnyang_square/domain/repositories/auth_repository.dart';
 import 'package:meongnyang_square/domain/repositories/feed_repository.dart';
 import 'package:meongnyang_square/domain/use_cases/upload_image_use_case.dart';
 import 'package:meongnyang_square/domain/use_cases/upsert_feed_use_case.dart';
+import 'package:meongnyang_square/presentation/pages/write/write_view_model.dart';
 
 /* 사용자 인증 */
 //Auth인증-DataSource용 생성자
@@ -59,3 +61,8 @@ final uploadImageUseCaseProvider = Provider((ref) {
 final upsertFeedUseCaseProvider = Provider((ref) {
   return UpsertFeedUseCase(ref.watch(feedRepositoryProvider));
 });
+
+// Write ViewModel Provider
+final writeViewModelProvider = NotifierProvider.autoDispose.family<WriteViewModel, WriteState, Feed?>(
+  () => WriteViewModel(),
+);

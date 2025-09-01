@@ -1,14 +1,8 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-<<<<<<< HEAD
-import 'package:meongnyang_square/domain/entities/feed.dart';
-import 'package:meongnyang_square/presentation/pages/home/home_page.dart';
-=======
->>>>>>> develop
+import 'package:meongnyang_square/firebase_options.dart';
 import 'package:meongnyang_square/presentation/pages/splash/splash_page.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:meongnyang_square/presentation/pages/write/write_page.dart';
-import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

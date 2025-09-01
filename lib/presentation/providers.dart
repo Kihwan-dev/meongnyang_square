@@ -6,9 +6,12 @@ import 'package:meongnyang_square/data/data_sources/feed_remote_data_source_impl
 import 'package:meongnyang_square/data/data_sources/storage_data_source_impl.dart';
 import 'package:meongnyang_square/data/repositories/auth_repository_impl.dart';
 import 'package:meongnyang_square/data/repositories/feed_repository_impl.dart';
+import 'package:meongnyang_square/data/repositories/storage_repository_impl.dart';
 import 'package:meongnyang_square/domain/entities/feed.dart';
 import 'package:meongnyang_square/domain/repositories/auth_repository.dart';
 import 'package:meongnyang_square/domain/repositories/feed_repository.dart';
+import 'package:meongnyang_square/domain/repositories/storage_repository.dart';
+import 'package:meongnyang_square/domain/use_cases/delete_image_use_case.dart';
 import 'package:meongnyang_square/domain/use_cases/upload_image_use_case.dart';
 import 'package:meongnyang_square/domain/use_cases/upsert_feed_use_case.dart';
 import 'package:meongnyang_square/presentation/pages/write/write_view_model.dart';
@@ -39,27 +42,34 @@ final feedRemoteDataSourceProvider = Provider((ref) {
   return FeedRemoteDataSourceImpl();
 });
 
-// Storage DataSource
-final storageDataSourceProvider = Provider((ref) {
-  return StorageDataSourceImpl();
-});
-
 // Feed Repository
 final feedRepositoryProvider = Provider<FeedRepository>((ref) {
-  return FeedRepositoryImpl(
-    ref.watch(feedRemoteDataSourceProvider),
-    ref.watch(storageDataSourceProvider),
-  );
-});
-
-// Upload Image Use Case
-final uploadImageUseCaseProvider = Provider((ref) {
-  return UploadImageUseCase(ref.watch(feedRepositoryProvider));
+  return FeedRepositoryImpl(ref.watch(feedRemoteDataSourceProvider));
 });
 
 // Upsert Feed Use Case
 final upsertFeedUseCaseProvider = Provider((ref) {
   return UpsertFeedUseCase(ref.watch(feedRepositoryProvider));
+});
+
+// Storage DataSource
+final storageDataSourceProvider = Provider((ref) {
+  return StorageDataSourceImpl();
+});
+
+// Storage Repository
+final storageRepositoryImpl = Provider<StorageRepository>((ref) {
+  return StorageRepositoryImpl(ref.watch(storageDataSourceProvider));
+});
+
+// Upload Image Use Case
+final uploadImageUseCaseProvider = Provider((ref) {
+  return UploadImageUseCase(ref.watch(storageRepositoryImpl));
+});
+
+// Delete Image Use Case
+final deleteImageUseCaseProvider = Provider((ref) {
+  return DeleteImageUseCase(ref.watch(storageRepositoryImpl));
 });
 
 // Write ViewModel Provider

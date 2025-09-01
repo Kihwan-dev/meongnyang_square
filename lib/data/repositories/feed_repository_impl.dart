@@ -26,4 +26,12 @@ class FeedRepositoryImpl implements FeedRepository {
       throw Exception("Firebase에 피드 저장 실패");
     }
   }
+
+  @override
+  Future<void> deleteFeed(String id) async {
+    final result = await _feedRemoteDataSource.deleteFeed(id);
+    if (!result) {
+      throw Exception("Feed 저장 실패");
+    }
+  }
 }

@@ -11,6 +11,7 @@ import 'package:meongnyang_square/domain/entities/feed.dart';
 import 'package:meongnyang_square/domain/repositories/auth_repository.dart';
 import 'package:meongnyang_square/domain/repositories/feed_repository.dart';
 import 'package:meongnyang_square/domain/repositories/storage_repository.dart';
+import 'package:meongnyang_square/domain/use_cases/delete_feed_use_case.dart';
 import 'package:meongnyang_square/domain/use_cases/delete_image_use_case.dart';
 import 'package:meongnyang_square/domain/use_cases/upload_image_use_case.dart';
 import 'package:meongnyang_square/domain/use_cases/upsert_feed_use_case.dart';
@@ -50,6 +51,10 @@ final feedRepositoryProvider = Provider<FeedRepository>((ref) {
 // Upsert Feed Use Case
 final upsertFeedUseCaseProvider = Provider((ref) {
   return UpsertFeedUseCase(ref.watch(feedRepositoryProvider));
+});
+
+final deleteFeedUseCaseProvider = Provider((ref) {
+  return DeleteFeedUseCase(ref.watch(feedRepositoryProvider));
 });
 
 // Storage DataSource

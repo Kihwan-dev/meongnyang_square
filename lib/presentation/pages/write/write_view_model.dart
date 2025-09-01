@@ -104,6 +104,19 @@ class WriteViewModel extends AutoDisposeFamilyNotifier<WriteState, Feed?> {
     }
   }
 
+  Future<String> deleteFeed() async {
+    // id를 가지고 delete
+    state = state.copyWith(isLoading: true);
+    try {
+      await ref.read(deleteFeedUseCaseProvider).execute(arg!.id);
+      state = state.copyWith(isLoading: false);
+    } catch (e) {
+      print(e);
+      state = state.copyWith(isLoading: false);
+    }
+    return "";
+  }
+
   Map<String, String> _validateInputs({
     required String tag,
     required String content,

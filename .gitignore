@@ -55,3 +55,10 @@ app.*.map.json
 # Firebase 관련 민감정보
 android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
+
+# Flutter에서 자동 생성되는 플러그인 등록 파일 (수정/커밋 불필요)
+ios/Runner/GeneratedPluginRegistrant.swift
+linux/flutter/generated_plugin_registrant.cc
+linux/flutter/generated_plugins.cmake
+windows/flutter/generated_plugin_registrant.cc
+windows/flutter/generated_plugins.cmake

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meongnyang_square/domain/entities/feed.dart';
 import 'package:meongnyang_square/presentation/pages/home/home_page.dart';
 import 'package:meongnyang_square/presentation/pages/splash/splash_page.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -29,7 +30,15 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.dark,
         fontFamily: 'SCDream',
       ),
-      home: WritePage(),
+      home: WritePage(
+          // feed: Feed(
+          //   id: "",
+          //   imagePath: "https://picsum.photos/200/300",
+          //   tag: "태그",
+          //   content: "내용",
+          //   createdAt: DateTime.now(),
+          // ),
+          ),
     );
   }
 }

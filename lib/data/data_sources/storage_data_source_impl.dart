@@ -8,12 +8,11 @@ class StorageDataSourceImpl implements StorageDataSource {
   @override
   Future<String> uploadImage(Uint8List imageData, String fileName) async {
     try {
-      final ref = _storage.ref("feed_images/$fileName");
+      final ref = _storage.ref("feeds/$fileName");
       await ref.putData(imageData);
       final downloadUrl = await ref.getDownloadURL();
       return downloadUrl;
     } catch (e) {
-      print(e);
       return "";
     }
   }

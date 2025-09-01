@@ -8,28 +8,28 @@ import 'package:meongnyang_square/presentation/providers.dart';
 
 class WriteState {
   WriteState({
-    this.imageData,
+    // this.imageData,
     this.isLoading = false,
-    this.errorMessage,
-    this.validationErrors = const {},
+    // this.errorMessage,
+    // this.validationErrors = const {},
   });
 
-  final Uint8List? imageData;
+  // final Uint8List? imageData;
   final bool isLoading;
-  final String? errorMessage;
-  final Map<String, String> validationErrors;
+  // final String? errorMessage;
+  // final Map<String, String> validationErrors;
 
   WriteState copyWith({
-    Uint8List? imageData,
+    // Uint8List? imageData,
     bool? isLoading,
-    String? errorMessage,
-    Map<String, String>? validationErrors,
+    // String? errorMessage,
+    // Map<String, String>? validationErrors,
   }) {
     return WriteState(
-      imageData: imageData ?? this.imageData,
+      // imageData: imageData ?? this.imageData,
       isLoading: isLoading ?? this.isLoading,
-      errorMessage: errorMessage ?? this.errorMessage,
-      validationErrors: validationErrors ?? this.validationErrors,
+      // errorMessage: errorMessage ?? this.errorMessage,
+      // validationErrors: validationErrors ?? this.validationErrors,
     );
   }
 }
@@ -38,38 +38,40 @@ class WriteViewModel extends AutoDisposeFamilyNotifier<WriteState, Feed?> {
   @override
   WriteState build(Feed? arg) {
     return WriteState(
-      imageData: null,
+      // imageData: null,
       isLoading: false,
-      errorMessage: null,
-      validationErrors: {},
+      // errorMessage: null,
+      // validationErrors: {},
     );
   }
 
-  Future<void> saveFeed({
-    required Uint8List imageData,
+  Future<String> saveFeed({
+    required Uint8List? imageData,
     required String tag,
     required String content,
   }) async {
-    final validationErrors = _validateInputs(tag: tag, content: content);
+    final validationErrors = _validateInputs(tag: tag, content: content, imageData: imageData);
     if (validationErrors.isNotEmpty) {
-      state = state.copyWith(
-        validationErrors: validationErrors,
-        errorMessage: null,
-      );
-      return;
+      // state = state.copyWith(
+      //   validationErrors: validationErrors,
+      //   errorMessage: "validationErrors.values.first",
+      // );
+      print("dd ${validationErrors.keys}");
+      // print(state.errorMessage);
+      return validationErrors.values.first;
     }
 
     state = state.copyWith(isLoading: true);
 
     try {
-      String imagePath = arg!.imagePath;
+      String imagePath = arg?.imagePath ?? "";
 
-      if (state.imageData != null) {
-        imagePath = await ref.read(uploadImageUseCaseProvider).execute(state.imageData!);
+      if (imageData != null) {
+        imagePath = await ref.read(uploadImageUseCaseProvider).execute(imageData);
       }
 
       final feedParams = FeedParams(
-        id: arg!.id,
+        id: arg?.id,
         tag: tag.trim(),
         content: content.trim(),
         imagePath: imagePath,
@@ -78,19 +80,28 @@ class WriteViewModel extends AutoDisposeFamilyNotifier<WriteState, Feed?> {
       await ref.read(upsertFeedUseCaseProvider).execute(feedParams);
 
       state = state.copyWith(isLoading: false);
+
+      return "";
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: "피드 저장 실패: $e",
+        //   errorMessage: "피드 저장 실패: $e",
       );
+      print("피드 저장 실패 : $e");
+      return "피드 저장 실패 : $e";
     }
   }
 
   Map<String, String> _validateInputs({
     required String tag,
     required String content,
+    required Uint8List? imageData,
   }) {
     final errors = <String, String>{};
+
+    if (imageData == null) {
+      errors["imageData"] = "이미지를 넣어주세요.";
+    }
 
     if (tag.trim().isEmpty) {
       errors['tag'] = '태그를 입력해주세요.';
@@ -106,5 +117,10 @@ class WriteViewModel extends AutoDisposeFamilyNotifier<WriteState, Feed?> {
     }
 
     return errors;
+  }
+
+  // path -> Uint8List
+  void setImageData(String path) {
+    //
   }
 }

@@ -2,22 +2,24 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meongnyang_square/domain/entities/feed.dart';
 import 'package:meongnyang_square/presentation/pages/write/write_widgets/cropper_widget.dart';
+import 'package:meongnyang_square/presentation/providers.dart';
 import 'write_widgets/write_widget.dart';
 
-class WritePage extends StatefulWidget {
-  const WritePage(this.feed);
+class WritePage extends ConsumerStatefulWidget {
+  WritePage({this.feed});
   final Feed? feed;
 
   @override
-  State<WritePage> createState() => _WritePageState();
+  ConsumerState<WritePage> createState() => _WritePageState();
 }
 
-class _WritePageState extends State<WritePage> {
-  final TextEditingController tagController = TextEditingController();
-  final TextEditingController contentController = TextEditingController();
+class _WritePageState extends ConsumerState<WritePage> {
+  late final TextEditingController tagController;
+  late final TextEditingController contentController;
 
   static const int maximumLength = 200;
 
@@ -28,6 +30,9 @@ class _WritePageState extends State<WritePage> {
   @override
   void initState() {
     super.initState();
+
+    tagController = TextEditingController(text: widget.feed?.tag ?? "");
+    contentController = TextEditingController(text: widget.feed?.content ?? "");
   }
 
   @override
@@ -39,6 +44,9 @@ class _WritePageState extends State<WritePage> {
 
   @override
   Widget build(BuildContext context) {
+    final writeState = ref.watch(writeViewModelProvider(widget.feed));
+    final writeViewModel = ref.read(writeViewModelProvider(widget.feed).notifier);
+
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -52,7 +60,28 @@ class _WritePageState extends State<WritePage> {
           title: Image.asset('assets/images/logo_s.png', width: 40, height: 20),
           actions: [
             GestureDetector(
-              onTap: () {},
+              onTap: () async {
+                String errorMessage = await writeViewModel.saveFeed(
+                  imageData: _croppedImage,
+                  tag: tagController.text,
+                  content: contentController.text,
+                );
+
+                // print(writeState.errorMessage);
+
+                if (!mounted) return;
+
+                if (errorMessage.isEmpty) {
+                  Navigator.pop(context);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(errorMessage),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
               child: Container(
                 width: 50,
                 height: 50,
@@ -194,7 +223,6 @@ class _WritePageState extends State<WritePage> {
         MaterialPageRoute(
           builder: (context) => CropperWidget(
             file: File(xFile.path),
-            aspectRatio: null,
           ),
         ),
       );

@@ -8,8 +8,13 @@ class FeedRemoteDataSourceImpl implements FeedRemoteDataSource {
   @override
   Future<bool> upsertFeed(FeedDto dto) async {
     try {
+      print("FeedDto ID: '${dto.id}'");
+      print("FeedDto ID length: ${dto.id?.length}");
+      print("FeedDto ID is empty: ${dto.id?.isEmpty}");
       final collection = _firestore.collection("feeds");
+      print("collection.path : ${collection.path}");
       final doc = dto.id == null ? collection.doc() : collection.doc(dto.id);
+      print("doc.id : ${doc.id}");
       await doc.set({
         "id": doc.id,
         "createdAt": DateTime.now().toIso8601String(),
@@ -20,6 +25,7 @@ class FeedRemoteDataSourceImpl implements FeedRemoteDataSource {
 
       return true;
     } catch (e) {
+      print("error : error : error : error : error : error : error : error : ");
       print(e);
       return false;
     }

@@ -1,6 +1,6 @@
 class FeedParams {
   FeedParams({
-    required this.id,
+    this.id,
     required this.tag,
     required this.content,
     required this.imagePath,

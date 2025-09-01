@@ -18,14 +18,16 @@ class StorageDataSourceImpl implements StorageDataSource {
   }
 
   @override
-  Future<void> deleteImage(String imagePath) async {
+  Future<bool> deleteImage(String imagePath) async {
     try {
       if (imagePath.isNotEmpty) {
         final ref = _storage.refFromURL(imagePath);
         await ref.delete();
       }
+      return true;
     } catch (e) {
       print(e);
+      return false;
     }
   }
 }

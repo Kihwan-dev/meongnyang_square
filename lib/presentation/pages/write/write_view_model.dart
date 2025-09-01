@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meongnyang_square/domain/entities/feed.dart';
 import 'package:meongnyang_square/domain/use_cases/feed_params.dart';
-import 'package:meongnyang_square/presentation/pages/home/widget/feed_page.dart';
 import 'package:meongnyang_square/presentation/providers.dart';
 
 class WriteState {
@@ -56,27 +55,40 @@ class WriteViewModel extends AutoDisposeFamilyNotifier<WriteState, Feed?> {
       //   validationErrors: validationErrors,
       //   errorMessage: "validationErrors.values.first",
       // );
-      print("dd ${validationErrors.keys}");
-      // print(state.errorMessage);
       return validationErrors.values.first;
     }
 
     state = state.copyWith(isLoading: true);
 
     try {
-      String imagePath = arg?.imagePath ?? "";
+      String imagePath = "";
 
-      if (imageData != null) {
-        imagePath = await ref.read(uploadImageUseCaseProvider).execute(imageData);
+      if (arg == null) {
+        // 새로 작성
+        // 1. 이미지 저장
+        imagePath = await ref.read(uploadImageUseCaseProvider).execute(imageData!);
+      } else {
+        // 수정
+        // 1. 이미지 수정?
+        if (imageData == null) {
+          // 이미지 수정 x
+          imagePath = arg!.imagePath;
+        } else {
+          // 이미지 수정 o
+          // 1. 기존 이미지 삭제 : how? 이미지 path를 이용해 삭제
+          await ref.read(deleteImageUseCaseProvider).execute(arg!.imagePath);
+          // 2. 새로운 이미지 저장
+          imagePath = await ref.read(uploadImageUseCaseProvider).execute(imageData);
+        }
       }
 
+      // 1. feedParams 객체 만들기
       final feedParams = FeedParams(
-        id: arg?.id,
         tag: tag.trim(),
         content: content.trim(),
         imagePath: imagePath,
       );
-
+      // 2. feedParams를 사용하여 피드 저장
       await ref.read(upsertFeedUseCaseProvider).execute(feedParams);
 
       state = state.copyWith(isLoading: false);
@@ -90,6 +102,19 @@ class WriteViewModel extends AutoDisposeFamilyNotifier<WriteState, Feed?> {
       print("피드 저장 실패 : $e");
       return "피드 저장 실패 : $e";
     }
+  }
+
+  Future<String> deleteFeed() async {
+    // id를 가지고 delete
+    state = state.copyWith(isLoading: true);
+    try {
+      await ref.read(deleteFeedUseCaseProvider).execute(arg!.id);
+      state = state.copyWith(isLoading: false);
+    } catch (e) {
+      print(e);
+      state = state.copyWith(isLoading: false);
+    }
+    return "";
   }
 
   Map<String, String> _validateInputs({

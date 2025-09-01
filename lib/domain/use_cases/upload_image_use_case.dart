@@ -1,11 +1,11 @@
 import 'dart:typed_data';
-import 'package:meongnyang_square/domain/repositories/feed_repository.dart';
+import 'package:meongnyang_square/domain/repositories/storage_repository.dart';
 
 class UploadImageUseCase {
-  UploadImageUseCase(this._feedRepository);
-  final FeedRepository _feedRepository;
+  UploadImageUseCase(this._storageRepository);
+  final StorageRepository _storageRepository;
 
   Future<String> execute(Uint8List imageData) async {
-    return await _feedRepository.uploadFeedImage(imageData);
+    return await _storageRepository.uploadFeedImage(imageData);
   }
 }

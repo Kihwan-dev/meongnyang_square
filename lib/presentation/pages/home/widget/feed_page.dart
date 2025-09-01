@@ -35,6 +35,13 @@ class _FeedPageState extends State<FeedPage> {
   bool _isScrollLoadingTriggered = false; // ScrollNotification 기반 무한스크롤 중복 방지
   int _lastItemsCount = 0; // 직전 피드 개수 기록 (예시→실데이터 전환용)
 
+  // 예시 페이지를 5개 단위로 추가하기 위한 상태
+  static const int exampleBatchSize = 5; // 한 번에 붙일 예시 개수
+  int exampleBatchCount = 1;             // 현재 예시 배치 수 (기본 5개)
+  bool isAppendingExamples = false;      // 예시 추가 중 중복 트리거 방지
+  bool readyToAppendExamples = false; // 바닥에 닿은 뒤 손을 뗄 때 5개 추가
+  bool recentlyAppendedExamples = false; // 한 번의 끌어당김 동작당 1회만 추가
+
   @override
   void initState() {
     super.initState();
@@ -53,7 +60,7 @@ class _FeedPageState extends State<FeedPage> {
   void didUpdateWidget(covariant FeedPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     final newCount = widget.feeds?.length ?? 0;
-    // 새 글이 추가되면 항상 최신(맨 위)으로 이동
+    // 새 글이 추가되면 최신(맨 위)으로 이동
     if (newCount > _lastItemsCount) {
       if (verticalController.hasClients) {
         verticalController.animateToPage(
@@ -64,6 +71,11 @@ class _FeedPageState extends State<FeedPage> {
       }
     }
     _lastItemsCount = newCount;
+
+    // 더 불러올 수 있는 상태로 전환되면 예시 배치를 초기화
+    if (widget.hasMore) {
+      exampleBatchCount = 1;
+    }
   }
 
   Future<void> onPageSwipe(int page) async {
@@ -183,11 +195,10 @@ class _FeedPageState extends State<FeedPage> {
   }
 
   Widget _buildCenterPage() {
-    final items = widget.feeds ?? const <FeedDto>[];
-    // 더 불러올 데이터가 없으면(example를 반복) 큰 tail 길이로 무한 스크롤 흉내
-    final infiniteTail = widget.hasMore ? 0 : 1000; // 예시를 사실상 무한 반복
-    final baseCount = items.isEmpty ? 1 : items.length; // 0개여도 제스처 일관성 유지
-    final itemCount = baseCount + infiniteTail;
+    final List<FeedDto> items = widget.feeds ?? const <FeedDto>[];
+    final bool hasRealItems = items.isNotEmpty;
+    final int exampleTail = widget.hasMore ? 0 : exampleBatchCount * exampleBatchSize; // 더 없음 → 예시 꼬리(배치)
+    final int itemCount = hasRealItems ? (items.length + exampleTail) : (exampleBatchCount * exampleBatchSize);
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -200,48 +211,77 @@ class _FeedPageState extends State<FeedPage> {
       },
       child: NotificationListener<ScrollNotification>(
         onNotification: (notification) {
-          // 스크롤 진행 중에 끝에 근접하면 추가 로드 (threshold 48px)
           if (notification is ScrollUpdateNotification) {
-            final m = notification.metrics;
-            const threshold = 48.0;
-            final isAtEnd = m.pixels >= m.maxScrollExtent - threshold;
-            if (isAtEnd && widget.hasMore && !_isRequestingMore && !_isScrollLoadingTriggered && items.isNotEmpty) {
-              _isScrollLoadingTriggered = true;
-              _isRequestingMore = true;
-              widget.onEndReached?.call().whenComplete(() {
-                _isRequestingMore = false;
-                _isScrollLoadingTriggered = false;
-              });
+            final ScrollMetrics metrics = notification.metrics;
+            const double endThreshold = 36.0; // 페이징 로드 트리거 임계값
+            final bool isNearEnd = metrics.pixels >= metrics.maxScrollExtent - endThreshold;
+
+            // 1) 페이징: 끝 근접 시 더 불러올 데이터가 있으면 loadMore 호출
+            if (isNearEnd && items.isNotEmpty) {
+              if (widget.hasMore && !_isRequestingMore && !_isScrollLoadingTriggered) {
+                _isScrollLoadingTriggered = true;
+                _isRequestingMore = true;
+                widget.onEndReached?.call().whenComplete(() {
+                  _isRequestingMore = false;
+                  _isScrollLoadingTriggered = false;
+                });
+              }
+            }
+
+            // 2) 예시 추가 arm: 실제로 끝을 넘겨서 끌어당긴 거리(overPull)가 충분할 때만 준비 플래그 on
+            if (!widget.hasMore) {
+              final double overPull = metrics.pixels - metrics.maxScrollExtent; // 0보다 크면 바닥 넘김
+              const double pullThreshold = 12.0; // 이 거리 이상 당겨야 arm
+              if (overPull > pullThreshold && !recentlyAppendedExamples) {
+                readyToAppendExamples = true; // 손을 떼면 추가
+              }
             }
           }
-          // 스크롤이 끝나면 트리거 리셋 (안정성)
+
+          // 3) 스크롤이 끝났을 때: arm 되어 있고 hasMore == false 이면 5개만 1회 추가
           if (notification is ScrollEndNotification) {
-            _isScrollLoadingTriggered = false;
+            if (readyToAppendExamples && !widget.hasMore && !isAppendingExamples && !recentlyAppendedExamples) {
+              isAppendingExamples = true;
+              recentlyAppendedExamples = true; // 같은 제스처에서 중복 방지
+              setState(() {
+                exampleBatchCount += 1; // 예시 5개 추가
+              });
+              readyToAppendExamples = false; // 소비
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                isAppendingExamples = false;
+              });
+              // 약간의 쿨다운 후 다시 허용
+              Future.delayed(const Duration(milliseconds: 250), () {
+                recentlyAppendedExamples = false;
+              });
+            }
+            _isScrollLoadingTriggered = false; // 로드 트리거 리셋
           }
+
           return false; // 버블링 허용
         },
         child: PageView.builder(
           controller: verticalController,
           scrollDirection: Axis.vertical,
-          physics: const AlwaysScrollableScrollPhysics(),
+          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
           itemCount: itemCount,
           itemBuilder: (context, index) {
             if (items.isEmpty) {
-              // 데이터가 전혀 없으면 예시 1장만 반복
+              // 실데이터가 없으면 예시를 5개부터 시작하고, 바닥 당길 때마다 5개씩 추가
               return _buildExample();
             }
 
-            // 더 이상 데이터가 없을 때는 마지막 이후 인덱스부터 계속 예시 화면을 보여줌
+            // 실데이터 뒤쪽은 (hasMore==false) 일 때만 예시로 채움
             if (!widget.hasMore && index >= items.length) {
               return _buildExample();
             }
 
-            final isLast = index == items.length - 1;
+            final bool isLastReal = index == items.length - 1;
             return Stack(
               children: [
                 _buildPost(items[index]),
-                // 오버레이는 더 불러오기 있을 때만 표시 (hasMore == true)
-                if (isLast && widget.hasMore) _buildBottomOverlay(),
+                // 로딩 중일 때만 스피너 노출
+                if (isLastReal) _buildBottomOverlay(),
               ],
             );
           },

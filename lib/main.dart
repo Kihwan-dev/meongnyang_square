@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:meongnyang_square/presentation/pages/home/home_page.dart';
 import 'package:meongnyang_square/presentation/pages/splash/splash_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -28,7 +27,7 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.dark,
         fontFamily: 'SCDream',
       ),
-      home: HomePage(),
+      home: SplashPage(),
     );
   }
 }

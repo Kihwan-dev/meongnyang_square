@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:meongnyang_square/data/dtos/feed_dto.dart';
 
 class HomeViewModel extends ChangeNotifier {
-  HomeViewModel({FirebaseFirestore? firestore, bool oldestFirst = true, int limit = 2})
+  HomeViewModel({FirebaseFirestore? firestore, bool oldestFirst = false, int limit = 2})
       : _firestore = firestore ?? FirebaseFirestore.instance,
         _oldestFirst = oldestFirst,
         _limit = limit;
@@ -52,7 +52,7 @@ class HomeViewModel extends ChangeNotifier {
     try {
       final query = _firestore
           .collection('feeds')
-          .orderBy('createdAt', descending: !_oldestFirst)
+          .orderBy('createdAt', descending: true)
           .limit(_limit);
 
       final snapshot = await query.get();
@@ -88,7 +88,7 @@ class HomeViewModel extends ChangeNotifier {
       list.sort((a, b) {
         final aTime = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
         final bTime = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-        return _oldestFirst ? aTime.compareTo(bTime) : bTime.compareTo(aTime);
+        return bTime.compareTo(aTime); // 최신 우선
       });
 
       feeds = List<FeedDto>.unmodifiable(list);
@@ -123,7 +123,7 @@ class HomeViewModel extends ChangeNotifier {
 
     final q = _firestore
         .collection('feeds')
-        .orderBy('createdAt', descending: !_oldestFirst);
+        .orderBy('createdAt', descending: true);
 
     _subscription = q.snapshots().listen(
       (snap) {
@@ -159,16 +159,11 @@ class HomeViewModel extends ChangeNotifier {
 
     Query<Map<String, dynamic>> q = _firestore
         .collection('feeds')
-        .orderBy('createdAt', descending: !_oldestFirst);
+        .orderBy('createdAt', descending: true);
 
-    // 최신 이후만 구독: oldestFirst=true면 이후(더 큰 시간), false면 이전(더 작은 시간)
+    // 최신 이후(더 최신)만 듣기 위해 endBefore 사용 (descending: true)
     final ts = _toTimestamp(_latestCreatedAt!);
-    if (_oldestFirst) {
-      q = q.startAfter([ts]);
-    } else {
-      // 최신이 리스트의 첫 요소이므로 그 이전(더 최신)만 듣기 위해 endBefore 사용
-      q = q.endBefore([ts]);
-    }
+    q = q.endBefore([ts]);
 
     _subscription = q.snapshots().listen(
       (snap) {
@@ -205,7 +200,7 @@ class HomeViewModel extends ChangeNotifier {
           list.sort((a, b) {
             final aTime = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
             final bTime = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-            return _oldestFirst ? aTime.compareTo(bTime) : bTime.compareTo(aTime);
+            return bTime.compareTo(aTime); // 최신 우선
           });
           feeds = List<FeedDto>.unmodifiable(list);
 
@@ -244,7 +239,7 @@ class HomeViewModel extends ChangeNotifier {
     try {
       Query<Map<String, dynamic>> query = _firestore
           .collection('feeds')
-          .orderBy('createdAt', descending: !_oldestFirst)
+          .orderBy('createdAt', descending: true)
           .limit(_limit)
           .startAfterDocument(_lastDocument!);
 
@@ -286,7 +281,7 @@ class HomeViewModel extends ChangeNotifier {
         list.sort((a, b) {
           final aTime = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
           final bTime = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-          return _oldestFirst ? aTime.compareTo(bTime) : bTime.compareTo(aTime);
+          return bTime.compareTo(aTime); // 최신 우선
         });
         feeds = List<FeedDto>.unmodifiable(list);
         _safeNotify();
@@ -344,7 +339,7 @@ class HomeViewModel extends ChangeNotifier {
       list.sort((a, b) {
         final aTime = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
         final bTime = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-        return _oldestFirst ? aTime.compareTo(bTime) : bTime.compareTo(aTime);
+        return bTime.compareTo(aTime); // 최신 우선
       });
 
       feeds = List<FeedDto>.unmodifiable(list);

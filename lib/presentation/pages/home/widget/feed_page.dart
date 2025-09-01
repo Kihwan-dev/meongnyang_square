@@ -53,18 +53,14 @@ class _FeedPageState extends State<FeedPage> {
   void didUpdateWidget(covariant FeedPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     final newCount = widget.feeds?.length ?? 0;
-    // 새 글이 추가되어 개수가 증가한 경우
+    // 새 글이 추가되면 항상 최신(맨 위)으로 이동
     if (newCount > _lastItemsCount) {
       if (verticalController.hasClients) {
-        final current = verticalController.page?.round() ?? 0;
-        // 이전에 마지막 이후(예시)나 이전 마지막 위치에 있었다면 새 마지막으로 이동
-        if (current >= _lastItemsCount - 1) {
-          verticalController.animateToPage(
-            newCount - 1,
-            duration: const Duration(milliseconds: 240),
-            curve: Curves.easeOut,
-          );
-        }
+        verticalController.animateToPage(
+          0,
+          duration: const Duration(milliseconds: 240),
+          curve: Curves.easeOut,
+        );
       }
     }
     _lastItemsCount = newCount;
@@ -243,7 +239,7 @@ class _FeedPageState extends State<FeedPage> {
             final isLast = index == items.length - 1;
             return Stack(
               children: [
-                _buildPost(items[index % items.length]),
+                _buildPost(items[index]),
                 // 오버레이는 더 불러오기 있을 때만 표시 (hasMore == true)
                 if (isLast && widget.hasMore) _buildBottomOverlay(),
               ],

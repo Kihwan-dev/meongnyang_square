@@ -209,7 +209,7 @@ class _CommentPageState extends State<CommentPage> {
         }
         if (snapshot.hasError) {
           return Center(
-              child: Text('오류: ${snapshot.error}',
+              child: Text('오류 : ${snapshot.error}',
                   style: TextStyle(color: Colors.white)));
         }
 

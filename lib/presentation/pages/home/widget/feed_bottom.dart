@@ -3,17 +3,20 @@ import 'package:meongnyang_square/presentation/pages/comment/comment_page.dart';
 import 'package:meongnyang_square/presentation/pages/write/write_page.dart';
 
 class FeedBottom extends StatelessWidget {
-  const FeedBottom({super.key});
+  const FeedBottom({super.key, required this.postId});
+  final String? postId;
 
   @override
   Widget build(BuildContext context) {
+    final canOpenComment = postId != null && postId!.isNotEmpty;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         GestureDetector(
           onTap: () {
-            //write페이지로 이동!
-            Navigator.of(context).push(MaterialPageRoute(builder: (context) => WritePage()));
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (context) => WritePage()));
           },
           child: Container(
             padding: EdgeInsets.all(12),
@@ -28,10 +31,10 @@ class FeedBottom extends StatelessWidget {
         ),
         GestureDetector(
           onTap: () {
-            //comment페이지로 이동!
-            Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (context) => CommentPage()));
+            final id = postId!;
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => CommentPage(postId: id)),
+            );
           },
           child: Container(
             padding: EdgeInsets.all(12),

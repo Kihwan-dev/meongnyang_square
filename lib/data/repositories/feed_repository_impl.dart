@@ -3,7 +3,6 @@ import 'package:meongnyang_square/data/dtos/feed_dto.dart';
 import 'package:meongnyang_square/domain/repositories/feed_repository.dart';
 import 'package:meongnyang_square/domain/use_cases/feed_params.dart';
 
-// 핵심은 DataSource를 받아와서 DataSource내부의 함수를 사용한다는 것!
 class FeedRepositoryImpl implements FeedRepository {
   FeedRepositoryImpl(this._feedRemoteDataSource);
   final FeedRemoteDataSource _feedRemoteDataSource;

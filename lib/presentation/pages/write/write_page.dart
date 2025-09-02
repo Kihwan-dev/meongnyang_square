@@ -159,21 +159,37 @@ class _WritePageState extends ConsumerState<WritePage> {
                 ),
               ],
             ),
-            Positioned(
-              left: 24,
-              bottom: 24,
-              child: FloatingActionButton(
-                heroTag: 'trashFloatingActionButton',
-                backgroundColor: const Color(0xFF2C2C2C),
-                onPressed: () {},
-                shape: const CircleBorder(),
-                child: const ImageIcon(
-                  AssetImage('assets/images/icon_trash.png'),
-                  size: 25,
-                  color: Colors.white,
-                ),
-              ),
-            ),
+            widget.feed == null
+                ? Container()
+                : Positioned(
+                    left: 24,
+                    bottom: 24,
+                    child: FloatingActionButton(
+                      heroTag: 'trashFloatingActionButton',
+                      backgroundColor: const Color(0xFF2C2C2C),
+                      onPressed: () async {
+                        //
+                        final isDeleted = await writeViewModel.deleteFeed();
+                        if (!mounted) return;
+                        if (isDeleted) {
+                          Navigator.pop(context);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("삭제 실패"),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                      shape: const CircleBorder(),
+                      child: const ImageIcon(
+                        AssetImage('assets/images/icon_trash.png'),
+                        size: 25,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
           ],
         ),
       ),

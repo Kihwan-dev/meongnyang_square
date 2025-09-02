@@ -14,7 +14,7 @@ class NotificationHelper {
   static final flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
-  static Future<void> initiailize() async {
+  static Future<void> initialize() async {
     // 안드로이드 초기화 설정
     // @mipmap/ic_launcher => android/src/main/mipmap/ic_launcher.png
     const AndroidInitializationSettings initializationSettingsAndroid =

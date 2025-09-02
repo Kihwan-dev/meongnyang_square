@@ -114,7 +114,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
                         ),
                       ),
                     ),
-                
+
                     // 로그인 폼은 세션 없을 때만
                     if (!checkingSession && !_hasSession)
                       Opacity(

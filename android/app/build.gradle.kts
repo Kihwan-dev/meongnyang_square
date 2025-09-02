@@ -30,7 +30,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.meongnyang_square"
-        minSdk = 23
+        minSdk = flutter.minSdkVersion
         // compileSdk랑 별개지만 맞춰주면 깔끔
         targetSdk = 35
         versionCode = flutter.versionCode

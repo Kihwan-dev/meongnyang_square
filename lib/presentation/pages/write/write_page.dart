@@ -8,6 +8,7 @@ import 'package:meongnyang_square/domain/entities/feed.dart';
 import 'package:meongnyang_square/presentation/pages/write/write_widgets/cropper_widget.dart';
 import 'package:meongnyang_square/presentation/providers.dart';
 import 'write_widgets/write_widget.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class WritePage extends ConsumerStatefulWidget {
   WritePage({this.feed});
@@ -45,7 +46,8 @@ class _WritePageState extends ConsumerState<WritePage> {
   @override
   Widget build(BuildContext context) {
     final writeState = ref.watch(writeViewModelProvider(widget.feed));
-    final writeViewModel = ref.read(writeViewModelProvider(widget.feed).notifier);
+    final writeViewModel =
+        ref.read(writeViewModelProvider(widget.feed).notifier);
 
     return GestureDetector(
       onTap: () {
@@ -61,10 +63,20 @@ class _WritePageState extends ConsumerState<WritePage> {
           actions: [
             GestureDetector(
               onTap: () async {
+                final uid = FirebaseAuth.instance.currentUser?.uid;
+                if (uid == null) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('로그인이 필요합니다.')),
+                  );
+                  return;
+                }
+
                 String errorMessage = await writeViewModel.saveFeed(
                   imageData: _croppedImage,
                   tag: tagController.text,
                   content: contentController.text,
+                  authorId: uid,
                 );
 
                 // print(writeState.errorMessage);
@@ -140,7 +152,8 @@ class _WritePageState extends ConsumerState<WritePage> {
                                         imageUrl: widget.feed!.imagePath,
                                         fit: BoxFit.cover,
                                         placeholder: (context, url) => Center(
-                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                          child: CircularProgressIndicator(
+                                              strokeWidth: 2),
                                         ),
                                       ),
                           ),

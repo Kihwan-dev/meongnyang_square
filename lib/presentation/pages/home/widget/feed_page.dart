@@ -76,9 +76,33 @@ class _FeedPageState extends State<FeedPage> {
         MaterialPageRoute(builder: (context) => WritePage()),
       );
     } else if (page == 2) {
-      await Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => CommentPage()),
-      );
+      final items = widget.feeds ?? const <FeedDto>[];
+      if (items.isNotEmpty) {
+        final idx = verticalController.hasClients
+            ? (verticalController.page?.round() ?? 0)
+            : 0;
+        final safeIdx = idx.clamp(0, items.length - 1);
+        final feed = items[safeIdx];
+        final id = feed.id;
+        if (id != null && id.isNotEmpty) {
+          await Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => CommentPage(postId: id)),
+          );
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('이 피드의 ID가 없어 댓글 페이지를 열 수 없어요.')),
+            );
+          }
+        }
+      } else {
+        // 피드가 없을 때는 그냥 무시
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('불러온 피드가 없습니다.')),
+          );
+        }
+      }
     }
 
     if (mounted) {
@@ -101,7 +125,8 @@ class _FeedPageState extends State<FeedPage> {
       return Image.network(
         path,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => const Image(image: fallback, fit: BoxFit.cover),
+        errorBuilder: (_, __, ___) =>
+            const Image(image: fallback, fit: BoxFit.cover),
       );
     }
     if (path.startsWith('assets/')) {
@@ -112,7 +137,8 @@ class _FeedPageState extends State<FeedPage> {
       return Image.file(
         file,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => const Image(image: fallback, fit: BoxFit.cover),
+        errorBuilder: (_, __, ___) =>
+            const Image(image: fallback, fit: BoxFit.cover),
       );
     }
     return const Image(image: fallback, fit: BoxFit.cover);
@@ -124,7 +150,8 @@ class _FeedPageState extends State<FeedPage> {
     return Stack(
       children: [
         Positioned.fill(child: background),
-        Positioned.fill(child: Container(color: Colors.black.withOpacity(0.30))),
+        Positioned.fill(
+            child: Container(color: Colors.black.withOpacity(0.30))),
         SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(30),
@@ -138,8 +165,8 @@ class _FeedPageState extends State<FeedPage> {
                       : null,
                   content: feed.content ?? '',
                 ),
-                const SizedBox(height: 16),
-                const FeedBottom(),
+                SizedBox(height: 16),
+                FeedBottom(postId: feed.id),
               ],
             ),
           ),
@@ -162,7 +189,13 @@ class _FeedPageState extends State<FeedPage> {
         child: Padding(
           padding: EdgeInsets.all(30),
           child: Column(
-            children: [FeedTop(), SizedBox(height: 16), FeedCenter(), SizedBox(height: 16), FeedBottom()],
+            children: [
+              FeedTop(),
+              SizedBox(height: 16),
+              FeedCenter(),
+              SizedBox(height: 16),
+              FeedBottom(postId: null),
+            ],
           ),
         ),
       ),
@@ -205,7 +238,11 @@ class _FeedPageState extends State<FeedPage> {
             final m = notification.metrics;
             const threshold = 48.0;
             final isAtEnd = m.pixels >= m.maxScrollExtent - threshold;
-            if (isAtEnd && widget.hasMore && !_isRequestingMore && !_isScrollLoadingTriggered && items.isNotEmpty) {
+            if (isAtEnd &&
+                widget.hasMore &&
+                !_isRequestingMore &&
+                !_isScrollLoadingTriggered &&
+                items.isNotEmpty) {
               _isScrollLoadingTriggered = true;
               _isRequestingMore = true;
               widget.onEndReached?.call().whenComplete(() {

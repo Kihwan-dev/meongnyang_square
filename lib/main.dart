@@ -10,7 +10,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await NotificationHelper.initiailize();
+  await NotificationHelper.initialize();
   runApp(const ProviderScope(child: MyApp()));
 }
 

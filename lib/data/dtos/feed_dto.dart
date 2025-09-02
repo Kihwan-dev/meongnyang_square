@@ -1,26 +1,32 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class FeedDto {
+  final String? id;
+  final DateTime? createdAt;
+  final String? tag;
+  final String? content;
+  final String? imagePath;
+  final String authorId;
+
   FeedDto({
     this.id,
     this.createdAt,
     this.tag,
     this.content,
     this.imagePath,
+    this.authorId = '',
   });
 
-  final String? id;
-  final DateTime? createdAt;
-  final String? tag;
-  final String? content;
-  final String? imagePath;
-
-  FeedDto.fromJson(Map<String, dynamic> map)
-      : this(
-          id: map["id"] ?? "",
-          createdAt: DateTime.parse(map["createdAt"] ?? ""),
-          tag: map["tag"] ?? "",
-          content: map["content"] ?? "",
-          imagePath: map["imagePath"] ?? "",
-        );
+  factory FeedDto.fromJson(Map<String, dynamic> map) {
+    return FeedDto(
+      id: map["id"] as String?,
+      createdAt: (map["createdAt"] as Timestamp?)?.toDate(),
+      tag: map["tag"] as String?,
+      content: map["content"] as String?,
+      imagePath: map["imagePath"] as String?,
+      authorId: (map["authorId"] ?? "") as String,
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return {
@@ -29,6 +35,7 @@ class FeedDto {
       "tag": tag,
       "content": content,
       "imagePath": imagePath,
+      "authorId": authorId,
     };
   }
 }

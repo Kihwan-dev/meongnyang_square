@@ -48,6 +48,10 @@
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<key>UIBackgroundModes</key>
+    <array>
+      <string>remote-notification</string>
+    </array>
 	<true/>
 </dict>
 </plist>

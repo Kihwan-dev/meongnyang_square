@@ -78,6 +78,6 @@ final deleteImageUseCaseProvider = Provider((ref) {
 });
 
 // Write ViewModel Provider
-final writeViewModelProvider = NotifierProvider.autoDispose.family<WriteViewModel, WriteState, Feed?>(
+final writeViewModelProvider = NotifierProvider.autoDispose.family<WriteViewModel, WriteState, Feed>(
   () => WriteViewModel(),
 );

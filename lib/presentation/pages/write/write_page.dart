@@ -12,8 +12,8 @@ import 'write_widgets/write_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class WritePage extends ConsumerStatefulWidget {
-  WritePage({this.feed});
-  final Feed? feed;
+  WritePage(this.feed);
+  final Feed feed;
 
   @override
   ConsumerState<WritePage> createState() => _WritePageState();
@@ -33,8 +33,8 @@ class _WritePageState extends ConsumerState<WritePage> {
   void initState() {
     super.initState();
 
-    tagController = TextEditingController(text: widget.feed?.tag ?? "");
-    contentController = TextEditingController(text: widget.feed?.content ?? "");
+    tagController = TextEditingController(text: widget.feed.tag);
+    contentController = TextEditingController(text: widget.feed.content);
   }
 
   @override
@@ -47,8 +47,7 @@ class _WritePageState extends ConsumerState<WritePage> {
   @override
   Widget build(BuildContext context) {
     final writeState = ref.watch(writeViewModelProvider(widget.feed));
-    final writeViewModel =
-        ref.read(writeViewModelProvider(widget.feed).notifier);
+    final writeViewModel = ref.read(writeViewModelProvider(widget.feed).notifier);
 
     return GestureDetector(
       onTap: () {
@@ -153,8 +152,7 @@ class _WritePageState extends ConsumerState<WritePage> {
                                         imageUrl: widget.feed!.imagePath,
                                         fit: BoxFit.cover,
                                         placeholder: (context, url) => Center(
-                                          child: CircularProgressIndicator(
-                                              strokeWidth: 2),
+                                          child: CircularProgressIndicator(strokeWidth: 2),
                                         ),
                                       ),
                           ),

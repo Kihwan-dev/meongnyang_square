@@ -72,15 +72,13 @@ class _FeedPageState extends State<FeedPage> {
     isSwiping = true;
 
     if (page == 0) {
-      await Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => WritePage()),
-      );
+      // await Navigator.of(context).push(
+      //   MaterialPageRoute(builder: (context) => WritePage()),
+      // );
     } else if (page == 2) {
       final items = widget.feeds ?? const <FeedDto>[];
       if (items.isNotEmpty) {
-        final idx = verticalController.hasClients
-            ? (verticalController.page?.round() ?? 0)
-            : 0;
+        final idx = verticalController.hasClients ? (verticalController.page?.round() ?? 0) : 0;
         final safeIdx = idx.clamp(0, items.length - 1);
         final feed = items[safeIdx];
         final id = feed.id;
@@ -125,8 +123,7 @@ class _FeedPageState extends State<FeedPage> {
       return Image.network(
         path,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) =>
-            const Image(image: fallback, fit: BoxFit.cover),
+        errorBuilder: (_, __, ___) => const Image(image: fallback, fit: BoxFit.cover),
       );
     }
     if (path.startsWith('assets/')) {
@@ -137,8 +134,7 @@ class _FeedPageState extends State<FeedPage> {
       return Image.file(
         file,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) =>
-            const Image(image: fallback, fit: BoxFit.cover),
+        errorBuilder: (_, __, ___) => const Image(image: fallback, fit: BoxFit.cover),
       );
     }
     return const Image(image: fallback, fit: BoxFit.cover);
@@ -150,8 +146,7 @@ class _FeedPageState extends State<FeedPage> {
     return Stack(
       children: [
         Positioned.fill(child: background),
-        Positioned.fill(
-            child: Container(color: Colors.black.withOpacity(0.30))),
+        Positioned.fill(child: Container(color: Colors.black.withOpacity(0.30))),
         SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(30),
@@ -160,9 +155,7 @@ class _FeedPageState extends State<FeedPage> {
                 FeedTop(createdAt: feed.createdAt),
                 const SizedBox(height: 16),
                 FeedCenter(
-                  title: (feed.tag != null && feed.tag!.trim().isNotEmpty)
-                      ? '#${feed.tag!.trim()}'
-                      : null,
+                  title: (feed.tag != null && feed.tag!.trim().isNotEmpty) ? '#${feed.tag!.trim()}' : null,
                   content: feed.content ?? '',
                 ),
                 SizedBox(height: 16),
@@ -238,11 +231,7 @@ class _FeedPageState extends State<FeedPage> {
             final m = notification.metrics;
             const threshold = 48.0;
             final isAtEnd = m.pixels >= m.maxScrollExtent - threshold;
-            if (isAtEnd &&
-                widget.hasMore &&
-                !_isRequestingMore &&
-                !_isScrollLoadingTriggered &&
-                items.isNotEmpty) {
+            if (isAtEnd && widget.hasMore && !_isRequestingMore && !_isScrollLoadingTriggered && items.isNotEmpty) {
               _isScrollLoadingTriggered = true;
               _isRequestingMore = true;
               widget.onEndReached?.call().whenComplete(() {

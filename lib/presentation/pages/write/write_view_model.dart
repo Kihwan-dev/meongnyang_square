@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meongnyang_square/domain/entities/feed.dart';
 import 'package:meongnyang_square/domain/use_cases/feed_params.dart';
@@ -48,8 +47,10 @@ class WriteViewModel extends AutoDisposeFamilyNotifier<WriteState, Feed?> {
     required Uint8List? imageData,
     required String tag,
     required String content,
+    required String authorId,
   }) async {
-    final validationErrors = _validateInputs(tag: tag, content: content, imageData: imageData);
+    final validationErrors =
+        _validateInputs(tag: tag, content: content, imageData: imageData);
     if (validationErrors.isNotEmpty) {
       // state = state.copyWith(
       //   validationErrors: validationErrors,
@@ -66,7 +67,8 @@ class WriteViewModel extends AutoDisposeFamilyNotifier<WriteState, Feed?> {
       if (arg == null) {
         // 새로 작성
         // 1. 이미지 저장
-        imagePath = await ref.read(uploadImageUseCaseProvider).execute(imageData!);
+        imagePath =
+            await ref.read(uploadImageUseCaseProvider).execute(imageData!);
       } else {
         // 수정
         // 1. 이미지 수정?
@@ -78,12 +80,14 @@ class WriteViewModel extends AutoDisposeFamilyNotifier<WriteState, Feed?> {
           // 1. 기존 이미지 삭제 : how? 이미지 path를 이용해 삭제
           await ref.read(deleteImageUseCaseProvider).execute(arg!.imagePath);
           // 2. 새로운 이미지 저장
-          imagePath = await ref.read(uploadImageUseCaseProvider).execute(imageData);
+          imagePath =
+              await ref.read(uploadImageUseCaseProvider).execute(imageData);
         }
       }
 
       // 1. feedParams 객체 만들기
       final feedParams = FeedParams(
+        authorId: authorId,
         tag: tag.trim(),
         content: content.trim(),
         imagePath: imagePath,

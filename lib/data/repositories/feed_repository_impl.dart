@@ -1,10 +1,9 @@
 import 'dart:typed_data';
-
 import 'package:meongnyang_square/data/data_sources/feed_remote_data_source.dart';
-import 'package:meongnyang_square/data/data_sources/storage_data_source.dart';
 import 'package:meongnyang_square/data/dtos/feed_dto.dart';
 import 'package:meongnyang_square/domain/repositories/feed_repository.dart';
 import 'package:meongnyang_square/domain/use_cases/feed_params.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FeedRepositoryImpl implements FeedRepository {
   FeedRepositoryImpl(this._feedRemoteDataSource);
@@ -12,12 +11,18 @@ class FeedRepositoryImpl implements FeedRepository {
 
   @override
   Future<void> upsertFeed(FeedParams feedParams) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      throw Exception("로그인된 사용자가 없습니다.");
+    }
+
     final feedDto = FeedDto(
       id: feedParams.id,
       createdAt: null,
       tag: feedParams.tag,
       content: feedParams.content,
       imagePath: feedParams.imagePath,
+      authorId: currentUser.uid,
     );
 
     final result = await _feedRemoteDataSource.upsertFeed(feedDto);

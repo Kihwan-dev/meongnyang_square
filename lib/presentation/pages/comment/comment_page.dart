@@ -40,7 +40,7 @@ class _CommentPageState extends State<CommentPage> {
         'text': text,
         'createdAt': FieldValue.serverTimestamp(),
         'clientAt': DateTime.now(),
-        // 'userId': ...  필요하면 추가
+        //'userId': authorId,
       });
 
       // 전송 후 입력 지우고 포커스 제거

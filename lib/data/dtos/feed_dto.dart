@@ -6,6 +6,7 @@ class FeedDto {
   final String? tag;
   final String? content;
   final String? imagePath;
+  final String authorId;
 
   FeedDto({
     this.id,
@@ -13,6 +14,7 @@ class FeedDto {
     this.tag,
     this.content,
     this.imagePath,
+    this.authorId = '',
   });
 
   factory FeedDto.fromJson(Map<String, dynamic> map) {
@@ -22,6 +24,7 @@ class FeedDto {
       tag: map["tag"] as String?,
       content: map["content"] as String?,
       imagePath: map["imagePath"] as String?,
+      authorId: (map["authorId"] ?? "") as String,
     );
   }
 
@@ -32,6 +35,7 @@ class FeedDto {
       "tag": tag,
       "content": content,
       "imagePath": imagePath,
+      "authorId": authorId,
     };
   }
 }

@@ -1,63 +1,39 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:path/path.dart' as p;
-
 import 'package:meongnyang_square/data/data_sources/feed_remote_data_source.dart';
 import 'package:meongnyang_square/data/dtos/feed_dto.dart';
 
 class FeedRemoteDataSourceImpl implements FeedRemoteDataSource {
-  final FirebaseFirestore _firestore;
-  final FirebaseStorage _storage;
-
-  FeedRemoteDataSourceImpl({
-    FirebaseFirestore? firestore,
-    FirebaseStorage? storage,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _storage = storage ?? FirebaseStorage.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   Future<bool> upsertFeed(FeedDto dto) async {
     try {
       final collection = _firestore.collection("feeds");
-      final doc = dto.id == null || dto.id!.isEmpty
-          ? collection.doc()
-          : collection.doc(dto.id);
-
-      String? imagePath = dto.imagePath;
-
-      // 로컬 경로일 경우 Storage 업로드 후 downloadURL로 치환
-      if (imagePath != null && imagePath.isNotEmpty && !imagePath.startsWith("http")) {
-        final file = imagePath.startsWith("file://")
-            ? File(Uri.parse(imagePath).path)
-            : File(imagePath);
-
-        if (await file.exists()) {
-          final fileName =
-              '${doc.id}_${DateTime.now().millisecondsSinceEpoch}${p.extension(file.path)}';
-          final ref = _storage.ref().child('feeds/$fileName');
-          await ref.putFile(file);
-          imagePath = await ref.getDownloadURL();
-        } else {
-          imagePath = null;
-        }
-      }
-
-      final payload = <String, dynamic>{
+      final doc = dto.id == null ? collection.doc() : collection.doc(dto.id);
+      await doc.set({
         "id": doc.id,
-        "tag": (dto.tag ?? '').trim(),
-        "content": (dto.content ?? '').trim(),
-        "createdAt": FieldValue.serverTimestamp(),
-      };
-      if (imagePath != null && imagePath.isNotEmpty) {
-        payload["imagePath"] = imagePath;
-      }
+        "createdAt": DateTime.now().toIso8601String(),
+        "tag": dto.tag ?? "",
+        "content": dto.content ?? "",
+        "imagePath": dto.imagePath ?? "",
+      });
 
-      await doc.set(payload, SetOptions(merge: true));
       return true;
     } catch (e) {
-      print('[FeedRemoteDataSourceImpl] upsertFeed ERROR: $e');
+      print(e);
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> deleteFeed(String id) async {
+    try {
+      final collection = _firestore.collection("feeds");
+      final doc = collection.doc(id);
+      await doc.delete();
+      return true;
+    } catch (e) {
+      print(e);
       return false;
     }
   }

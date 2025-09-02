@@ -1,13 +1,16 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meongnyang_square/presentation/pages/home/home_page.dart';
 import 'package:meongnyang_square/presentation/pages/splash/splash_widgets/auth_form.dart';
 
 //스플래시 화면
-class SplashPage extends StatefulWidget {
+class SplashPage extends ConsumerStatefulWidget {
   @override
-  State<SplashPage> createState() => _SplashPageState();
+  ConsumerState<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage>
+class _SplashPageState extends ConsumerState<SplashPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
@@ -16,6 +19,10 @@ class _SplashPageState extends State<SplashPage>
   //로고 위로 이동, 버튼 페이드인
   late Animation<double> _translateY;
   late Animation<double> _loginFade;
+
+  //세션확인용
+  bool checkingSession = true;
+  bool _hasSession = false;
 
   @override
   void initState() {
@@ -53,6 +60,27 @@ class _SplashPageState extends State<SplashPage>
     );
 
     _controller.forward();
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed && mounted && _hasSession) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomePage()),
+        );
+      }
+    });
+    checkSessionRoute();
+  }
+
+  //세션확인
+  Future<void> checkSessionRoute() async {
+    final user = await FirebaseAuth.instance.authStateChanges().first;
+    if (!mounted) return;
+
+    if (user != null) {
+      _hasSession = true;
+    } else {
+      setState(() => checkingSession = false);
+    }
   }
 
   @override
@@ -64,45 +92,40 @@ class _SplashPageState extends State<SplashPage>
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-      },
+      onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         body: SafeArea(
           child: AnimatedBuilder(
             animation: _controller,
             builder: (context, _) {
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: Transform.translate(
-                      offset: Offset(0, _translateY.value),
-                      child: ScaleTransition(
-                        scale: _scaleAnimation,
-                        child: Column(
-                          children: [
-                            //로고 이미지
-                            Image.asset(
-                              'assets/images/logo.png',
-                              width: 116,
-                            ),
-                          ],
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // 스플래시(로고 애니메이션)는 항상 그림
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: Transform.translate(
+                        offset: Offset(0, _translateY.value),
+                        child: ScaleTransition(
+                          scale: _scaleAnimation,
+                          child:
+                              Image.asset('assets/images/logo.png', width: 116),
                         ),
                       ),
                     ),
-                  ),
 
-                  //로그인폼:페이드인
-                  Opacity(
-                    opacity: _loginFade.value,
-                    child: IgnorePointer(
-                      ignoring: _loginFade.value < 0.99, // 거의 다 보일 때부터 터치 허용
-                      child: AuthForm(),
-                    ),
-                  ),
-                ],
+                    // 로그인 폼은 세션 없을 때만
+                    if (!checkingSession && !_hasSession)
+                      Opacity(
+                        opacity: _loginFade.value,
+                        child: IgnorePointer(
+                          ignoring: _loginFade.value < 0.99,
+                          child: AuthForm(),
+                        ),
+                      ),
+                  ],
+                ),
               );
             },
           ),

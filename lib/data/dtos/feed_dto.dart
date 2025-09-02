@@ -8,11 +8,11 @@ class FeedDto {
   final String? imagePath;
 
   FeedDto({
-    required this.id,
-    required this.createdAt,
-    required this.tag,
-    required this.content,
-    required this.imagePath,
+    this.id,
+    this.createdAt,
+    this.tag,
+    this.content,
+    this.imagePath,
   });
 
   factory FeedDto.fromJson(Map<String, dynamic> map) {

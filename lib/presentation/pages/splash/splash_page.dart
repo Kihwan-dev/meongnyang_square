@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:meongnyang_square/presentation/pages/home/home_page.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meongnyang_square/presentation/pages/splash/splash_widgets/auth_form.dart';
 
 //스플래시 화면
@@ -62,10 +62,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
     _controller.forward();
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed && mounted && _hasSession) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomePage()),
-        );
+        context.go('/homepage');
       }
     });
     checkSessionRoute();

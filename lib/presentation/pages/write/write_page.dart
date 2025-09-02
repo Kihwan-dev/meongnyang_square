@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meongnyang_square/domain/entities/feed.dart';
 import 'package:meongnyang_square/presentation/pages/write/write_widgets/cropper_widget.dart';
@@ -84,7 +85,7 @@ class _WritePageState extends ConsumerState<WritePage> {
                 if (!mounted) return;
 
                 if (errorMessage.isEmpty) {
-                  Navigator.pop(context);
+                  context.pop();
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -185,7 +186,7 @@ class _WritePageState extends ConsumerState<WritePage> {
                         final isDeleted = await writeViewModel.deleteFeed();
                         if (!mounted) return;
                         if (isDeleted) {
-                          Navigator.pop(context);
+                          context.pop();
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -222,7 +223,7 @@ class _WritePageState extends ConsumerState<WritePage> {
               leading: Icon(Icons.photo),
               title: Text("갤러리"),
               onTap: () {
-                Navigator.pop(context);
+                context.pop();
                 _pickImage(ImageSource.gallery);
               },
             ),
@@ -230,7 +231,7 @@ class _WritePageState extends ConsumerState<WritePage> {
               leading: Icon(Icons.camera_alt),
               title: Text("카메라로 촬영"),
               onTap: () {
-                Navigator.pop(context);
+                context.pop();
                 _pickImage(ImageSource.camera);
               },
             ),

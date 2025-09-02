@@ -30,13 +30,12 @@ android {
 
     defaultConfig {
         applicationId = "com.example.meongnyang_square"
-        minSdk = flutter.minSdkVersion
-        // compileSdk랑 별개지만 맞춰주면 깔끔
+        minSdk = 23
+
         targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
-        // 멀티덱스 활성화
         multiDexEnabled = true
     }
 

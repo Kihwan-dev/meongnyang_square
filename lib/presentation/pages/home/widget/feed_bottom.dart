@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:meongnyang_square/presentation/pages/comment/comment_page.dart';
-import 'package:meongnyang_square/presentation/pages/write/write_page.dart';
+import 'package:go_router/go_router.dart';
+
 
 class FeedBottom extends StatelessWidget {
   const FeedBottom({super.key, required this.postId});
@@ -15,8 +15,7 @@ class FeedBottom extends StatelessWidget {
       children: [
         GestureDetector(
           onTap: () {
-            Navigator.of(context)
-                .push(MaterialPageRoute(builder: (context) => WritePage()));
+            context.push('/homepage/writepage');
           },
           child: Container(
             padding: EdgeInsets.all(12),
@@ -31,10 +30,14 @@ class FeedBottom extends StatelessWidget {
         ),
         GestureDetector(
           onTap: () {
-            final id = postId!;
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => CommentPage(postId: id)),
-            );
+            final openComment = postId != null && postId!.isNotEmpty;
+            if (!canOpenComment) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('댓글을 열 수 없는 게시글입니다.')),
+              );
+              return;
+            }
+            context.push('/homepage/comment/${postId!}');
           },
           child: Container(
             padding: EdgeInsets.all(12),

@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meongnyang_square/firebase_options.dart';
 import 'package:meongnyang_square/presentation/pages/splash/splash_page.dart';
+import 'package:meongnyang_square/core/notifications/notification_helper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await NotificationHelper.initiailize();
   runApp(const ProviderScope(child: MyApp()));
 }
 

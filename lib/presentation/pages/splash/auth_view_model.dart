@@ -56,6 +56,16 @@ class AuthViewModel extends Notifier<AuthState> {
       rethrow;
     }
   }
+
+  /// 세션이 남아있을 때, 그 유저정보만 상태에 반영
+  void setSessionUser(AuthUser? user) {
+    state = AuthState(
+      user: user,
+      isUser: state.isUser, 
+      isLoading: false,      
+    );
+  }
+
 }
 
 final authViewModelProvider =

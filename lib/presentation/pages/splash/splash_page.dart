@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:meongnyang_square/domain/entities/auth_user.dart';
+import 'package:meongnyang_square/presentation/pages/splash/auth_view_model.dart';
 import 'package:meongnyang_square/presentation/pages/splash/splash_widgets/auth_form.dart';
 
 //스플래시 화면
@@ -70,12 +72,17 @@ class _SplashPageState extends ConsumerState<SplashPage>
 
   //세션확인
   Future<void> checkSessionRoute() async {
-    final user = await FirebaseAuth.instance.authStateChanges().first;
+    final fUser = await FirebaseAuth.instance.authStateChanges().first;
     if (!mounted) return;
 
-    if (user != null) {
+    final vm = ref.read(authViewModelProvider.notifier);
+
+    if (fUser != null) {
+      vm.setSessionUser(AuthUser(uid: fUser.uid, email: fUser.email));
       _hasSession = true;
+      if (mounted) context.go('/homepage');
     } else {
+      vm.setSessionUser(null);
       setState(() => checkingSession = false);
     }
   }

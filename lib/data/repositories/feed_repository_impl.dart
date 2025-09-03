@@ -50,7 +50,7 @@ class FeedRepositoryImpl implements FeedRepository {
     final entities = dtos
         .map(
           (e) => Feed(
-            authorId: e.authorId,
+            authorId: e.authorId ?? "",
             content: e.content ?? "",
             createdAt: e.createdAt ?? DateTime.now(),
             id: e.id ?? "",

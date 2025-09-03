@@ -6,7 +6,7 @@ class FeedDto {
   final String? tag;
   final String? content;
   final String? imagePath;
-  final String authorId;
+  final String? authorId;
 
   FeedDto({
     this.id,
@@ -14,17 +14,17 @@ class FeedDto {
     this.tag,
     this.content,
     this.imagePath,
-    this.authorId = '',
+    this.authorId,
   });
 
   factory FeedDto.fromJson(Map<String, dynamic> map) {
     return FeedDto(
-      id: map["id"] as String?,
-      createdAt: (map["createdAt"] as Timestamp?)?.toDate(),
-      tag: map["tag"] as String?,
-      content: map["content"] as String?,
-      imagePath: map["imagePath"] as String?,
-      authorId: (map["authorId"] ?? "") as String,
+      id: map["id"],
+      createdAt: map["createdAt"] == null ? DateTime.parse(map["createdAt"]) : DateTime.now(),
+      tag: map["tag"],
+      content: map["content"],
+      imagePath: map["imagePath"],
+      authorId: map["authorId"],
     );
   }
 

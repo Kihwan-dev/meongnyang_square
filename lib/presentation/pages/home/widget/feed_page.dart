@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:meongnyang_square/domain/entities/feed.dart';
 import 'package:meongnyang_square/presentation/pages/comment/comment_page.dart';
@@ -68,11 +69,6 @@ class _FeedPageState extends State<FeedPage> {
           duration: const Duration(milliseconds: 240),
           curve: Curves.easeOut,
         );
-        verticalController.animateToPage(
-          0,
-          duration: const Duration(milliseconds: 240),
-          curve: Curves.easeOut,
-        );
       }
     }
     _lastItemsCount = newCount;
@@ -83,8 +79,13 @@ class _FeedPageState extends State<FeedPage> {
     }
   }
 
-  Future<void> _goToWriteWithCurrentFeed() async {
-    // 1) 현재 세로 페이지 인덱스 계산
+  List<Feed> getFeedList() {
+    return widget.feeds ?? const <Feed>[];
+  }
+
+  // 현재 세로 PageView에서 사용자가 보고 있는 카드의 인덱스를 계산
+  // • PageController.hasClients: 실제 PageView에 연결된 경우에만 page 값을 읽음(안전 가드)
+  int _getCurrentVerticalPageIndex() {
     int currentIndex = 0;
     if (verticalController.hasClients) {
       final double? pageValue = verticalController.page;
@@ -92,50 +93,93 @@ class _FeedPageState extends State<FeedPage> {
         currentIndex = pageValue.round();
       }
     }
-
-    // 2) 현재 인덱스의 피드를 안전하게 가져오기
-    final List<Feed> items = widget.feeds ?? const <Feed>[];
-    // 피드가 없을 때: null 값을 WritePage로 전달
-    if (items.isEmpty) {
-      // ignore: avoid_print
-      print('[FeedPage→WritePage] feeds=0, currentIndex=0');
-      // 전체 피드를 Feed(도메인) 리스트로 전달
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => WritePage(),
-          settings: const RouteSettings(
-            arguments: {
-              'feed': null, // 현재 페이지가 없으므로 null 전달
-            },
-          ),
-        ),
-      );
-      return;
-    }
+    final List<Feed> items = getFeedList();
     if (currentIndex < 0) currentIndex = 0;
     if (currentIndex >= items.length) currentIndex = items.length - 1;
-    final Feed currentFeed = items[currentIndex];
+    return currentIndex;
+  }
 
-    // 현재 페이지의 Feed 정보를 디버그 로그로 출력
-    // ignore: avoid_print
-    print('[FeedPage→WritePage] currentFeed(index=$currentIndex): '
-        'id=${currentFeed.id}, tag=${currentFeed.tag}, '
-        'content=${currentFeed.content}, createdAt=${currentFeed.createdAt}, '
-        'imagePath=${currentFeed.imagePath}, authorId=${currentFeed.authorId}');
-
-    // ignore: avoid_print
-    //print('[FeedPage→WritePage] feeds=${items.length}, currentIndex=$currentIndex, currentFeedId=${currentFeed.id}');
-    // 현재 페이지의 Feed 객체를 WritePage로 전달
+  // WritePage로 화면 전환
+  // RouteSettings.arguments로 단일 Feed 객체를 전달
+  // feed가 null인 경우에는 WritePage에서 빈 상태로 처리하도록 넘김
+  Future<void> _openWritePage(Feed? feed) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => WritePage(), // WritePage는 수정 불가 → 인자 없이 호출
+        builder: (_) => WritePage(),
         settings: RouteSettings(
           arguments: {
-            'feed': currentFeed, // 현재 페이지의 단일 Feed만 전달
+            'feed': feed,
           },
         ),
       ),
     );
+  }
+
+  // CommentPage로 화면 전환
+  // postId에는 feed.id를 그대로 전달
+  // RouteSettings.arguments에는 'authId'(작성자)와 'feedId'(문서 ID)를 함께 전달
+  // feed.id가 없거나 비어 있으면 무시
+  Future<void> _openCommentPage(Feed feed) async {
+    final id = feed.id;
+    if (id == null || id.isEmpty) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CommentPage(postId: id),
+        settings: RouteSettings(
+          arguments: {
+            'authId': feed.authorId ?? '',
+            'feedId': id,
+          },
+        ),
+      ),
+    );
+  }
+
+  // WritePage 이동 직전에 전달 예정인 값을 디버그 콘솔에 출력
+  // feed == null: 피드가 없을 때의 경로(빈 상태) 표시
+  // feed != null: 현재 인덱스와 함께 주요 필드를 모두 출력
+  void _logWriteArguments(Feed? feed, int index) {
+    if (feed == null) {
+      // ignore: avoid_print
+      print('[FeedPage→WritePage] feeds=0, currentIndex=0');
+    } else {
+      // ignore: avoid_print
+      print('[FeedPage→WritePage] currentFeed(index=$index): '
+          'id=${feed.id}, tag=${feed.tag}, '
+          'content=${feed.content}, createdAt=${feed.createdAt}, '
+          'imagePath=${feed.imagePath}, authorId=${feed.authorId}');
+    }
+  }
+
+  // CommentPage 이동 직전에 전달 예정인 값을 디버그 콘솔에 출력
+  // index: 현재 화면에서 선택된 카드의 위치
+  // feedId, authorId: 댓글 화면에서 필요한 식별값
+  void _logCommentArguments(int index, Feed feed) {
+    final id = feed.id ?? '';
+    final authId = feed.authorId ?? '';
+    print('[FeedPage→CommentPage] index=$index, feedId=$id, authId=$authId');
+  }
+
+  Future<void> _goToWriteWithCurrentFeed() async {
+    // 1) 피드 리스트 확보 (없으면 빈 리스트)
+    final List<Feed> items = getFeedList();
+
+    // 2) 피드가 하나도 없으면 null을 전달하고 종료
+    if (items.isEmpty) {
+      _logWriteArguments(null, 0);
+      await _openWritePage(null);
+      return;
+    }
+
+    // 3) 현재 세로 페이지 인덱스 계산 후 안전 보정 → 해당 피드 선택
+    int currentIndex = _getCurrentVerticalPageIndex();
+    final Feed currentFeed = items[currentIndex];
+
+    // 4) 디버그 로그: 현재 피드와 인덱스를 콘솔에 출력
+    _logWriteArguments(currentFeed, currentIndex);
+
+    // 5) 화면 전환: 현재 피드만 arguments로 전달
+    await _openWritePage(currentFeed);
   }
 
   Future<void> onPageSwipe(int page) async {
@@ -143,36 +187,24 @@ class _FeedPageState extends State<FeedPage> {
     if (isSwiping) return;
     isSwiping = true;
 
-    // 왼쪽 스와이프 시 → WritePage로 이동
+    // page == 0: 왼쪽 스와이프 → WritePage로 이동
     if (page == 0) {
       await _goToWriteWithCurrentFeed();
     }
-    // 오른쪽 스와이프 시 → CommentPage로 이동
+    // page == 2: 오른쪽 스와이프 → CommentPage로 이동
     else if (page == 2) {
-      final List<Feed> items = widget.feeds ?? const <Feed>[];
+      // 1) 현재 피드 리스트 확보 (없으면 조용히 종료)
+      final List<Feed> items = getFeedList();
       if (items.isNotEmpty) {
-        final idx = verticalController.hasClients
-            ? (verticalController.page?.round() ?? 0)
-            : 0;
-        final safeIdx = idx.clamp(0, items.length - 1);
-        final feed = items[safeIdx];
-        final id = feed.id;
-        if (id != null && id.isNotEmpty) {
-          // 현재 페이지 Feed의 feedId, authId 값을 디버그 로그로 출력하고 CommentPage로 전달
-          // ignore: avoid_print
-          print('[FeedPage→CommentPage] index=$safeIdx, feedId=$id, authId=${feed.authorId ?? ''}');
-          await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => CommentPage(postId: id),
-              settings: RouteSettings(
-                arguments: {
-                  'authId': feed.authorId ?? '',
-                  'feedId': id,
-                },
-              ),
-            ),
-          );
-        }
+        // 2) 현재 세로 페이지 인덱스를 계산하고, 그 인덱스의 피드를 선택
+        final int currentIndex = _getCurrentVerticalPageIndex();
+        final Feed feed = items[currentIndex];
+
+        // 3) 디버그 로그: feedId, authorId, index를 콘솔에 출력
+        _logCommentArguments(currentIndex, feed);
+
+        // 4) 화면 전환: postId + arguments(authId, feedId) 전달
+        await _openCommentPage(feed);
       } else {
         // 피드가 없을 때는 그냥 무시
         if (mounted) {
@@ -244,6 +276,9 @@ class _FeedPageState extends State<FeedPage> {
                   content: feed.content ?? '',
                 ),
                 const SizedBox(height: 16),
+                // 하단 액션 영역
+                // onWritePressed: 현재 화면에서 보고 있는 인덱스의 피드만 WritePage로 전달
+                // onCommentPressed: 탭한 카드의 feedId, authorId를 CommentPage로 전달
                 FeedBottom(
                   // 글쓰기 아이콘 눌렀을 때 → WritePage로 이동
                   onWritePressed: () async {
@@ -254,7 +289,6 @@ class _FeedPageState extends State<FeedPage> {
                     final String? id = feed.id;
                     if (id != null && id.isNotEmpty) {
                       // 디버그: 코멘트 아이콘 탭
-                      // ignore: avoid_print
                       print('[FeedBottom→CommentPage] feedId=$id, authId=${feed.authorId ?? ''}');
                       await Navigator.of(context).push(
                         MaterialPageRoute(

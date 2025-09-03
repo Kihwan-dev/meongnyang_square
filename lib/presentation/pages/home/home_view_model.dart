@@ -56,6 +56,7 @@ class HomeViewModel extends ChangeNotifier {
       final query = _firestore
           .collection('feeds')
           .orderBy('createdAt', descending: true)
+          .orderBy('createdAt', descending: true)
           .limit(_limit);
 
       final snapshot = await query.get();
@@ -127,6 +128,7 @@ class HomeViewModel extends ChangeNotifier {
 
     final queryRealtime = _firestore
         .collection('feeds')
+        .orderBy('createdAt', descending: true);
         .orderBy('createdAt', descending: true);
 
     _subscription = queryRealtime.snapshots().listen(
@@ -293,6 +295,7 @@ class HomeViewModel extends ChangeNotifier {
     try {
       Query<Map<String, dynamic>> query = _firestore
           .collection('feeds')
+          .orderBy('createdAt', descending: true)
           .orderBy('createdAt', descending: true)
           .limit(_limit)
           .startAfterDocument(_lastDocument!);

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:meongnyang_square/presentation/pages/comment/comment_page.dart';
-import 'package:meongnyang_square/presentation/pages/write/write_page.dart';
+import 'package:go_router/go_router.dart';
+
 
 class FeedBottom extends StatelessWidget {
   final VoidCallback? onWritePressed;
@@ -14,6 +14,8 @@ class FeedBottom extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final canOpenComment = postId != null && postId!.isNotEmpty;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [

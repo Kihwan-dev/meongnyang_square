@@ -1,7 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:meongnyang_square/presentation/pages/home/home_page.dart';
-import 'package:meongnyang_square/presentation/pages/splash/splash_view_model.dart';
+import 'package:go_router/go_router.dart';
+import 'package:meongnyang_square/presentation/pages/splash/auth_view_model.dart';
 
 // 로그인, 인포 폼
 class AuthForm extends ConsumerStatefulWidget {
@@ -10,9 +11,9 @@ class AuthForm extends ConsumerStatefulWidget {
 }
 
 class _AuthFormState extends ConsumerState<AuthForm> {
+  final _formKey = GlobalKey<FormState>();
   final emailController = TextEditingController();
   final pwController = TextEditingController();
-  bool isUser = true;
 
   @override
   void dispose() {
@@ -21,28 +22,20 @@ class _AuthFormState extends ConsumerState<AuthForm> {
     super.dispose();
   }
 
-  //로그인실패 회원가입 진행 팝업
-  void showJoinPopup() {
+  //에러메시지 다이얼로그
+  void showErrorPopup({String? message}) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('로그인 실패'),
-          content: const Text('이메일 혹은 비밀번호 오류입니다.\n회원이 아니시라면 회원가입을 진행해주세요.'),
+          title: const Text('실패!'),
+          content:
+              Text((message?.isNotEmpty ?? false) ? message! : '문제가 발생했습니다.'),
           actions: [
             TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('닫기')),
-            TextButton(
-                onPressed: () {
-                  setState(() {
-                    isUser = false;
-                  });
-                  Navigator.pop(context);
-                },
-                child: const Text('회원가입')),
+              onPressed: () => context.pop(),
+              child: const Text('닫기'),
+            ),
           ],
         );
       },
@@ -55,19 +48,13 @@ class _AuthFormState extends ConsumerState<AuthForm> {
       await ref
           .read(authViewModelProvider.notifier)
           .login(emailController.text, pwController.text);
-      setState(() {
-        isUser = true;
-      });
-      Navigator.push(context, MaterialPageRoute(
-        builder: (context) {
-          return HomePage();
-        },
-      ));
+      if (!mounted) return;
+      context.go('/homepage');
     } catch (e) {
-      print('로그인 실패!! $e');
       emailController.clear();
       pwController.clear();
-      showJoinPopup();
+      showErrorPopup(
+          message: '이메일 또는 비밀번호가 올바르지 않습니다. \n회원이 아니시라면 회원가입을 진행해주세요.');
     }
   }
 
@@ -77,82 +64,120 @@ class _AuthFormState extends ConsumerState<AuthForm> {
       await ref
           .read(authViewModelProvider.notifier)
           .join(emailController.text, pwController.text);
-      setState(() {
-        isUser = true;
-      });
-      Navigator.push(context, MaterialPageRoute(
-        builder: (context) {
-          return HomePage();
-        },
-      ));
+      if (!mounted) return;
+      context.go('/homepage');
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'email-already-in-use') {
+        showErrorPopup(message: '이미 사용중인 이메일입니다.');
+      }
     } catch (e) {
-      setState(() {
-        isUser = false;
-      });
-      print('회원가입 실패!! $e');
+      showErrorPopup();
     }
   }
 
-  //텍스트필드
-  Container inputBox(TextEditingController controller, String title, bool obscure) {
-    return Container(
-      padding: EdgeInsets.only(left: 20),
-      height: 60,
-      decoration: BoxDecoration(
-        color: Colors.white10,
-        borderRadius: BorderRadius.circular(10),
+  //텍스트폼 필드 & 밸리데이트
+  TextFormField inputBox(
+      TextEditingController controller, String title, bool obscure) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscure,
+      textAlignVertical: TextAlignVertical.center,
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.white10,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide.none,
+        ),
+        prefixIcon: Container(
+          padding: const EdgeInsets.only(left: 20),
+          width: 75,
+          child: Text(title, style: const TextStyle(color: Colors.white60)),
+        ),
+        prefixIconConstraints: const BoxConstraints(minWidth: 75),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+        errorMaxLines: 2,
       ),
-      child: Row(
-        children: [
-          SizedBox(
-              width: 55,
-              child: Text(
-                title,
-                style: TextStyle(color: Colors.white60),
-              )),
-          Expanded(
-            child: TextField(
-              textAlignVertical: TextAlignVertical.center,
-              controller: controller,
-              obscureText: obscure,
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-        ],
-      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) return "$title 입력해주세요";
+        if (title == "Email" && !value.contains("@")) return "올바른 이메일 형식이 아닙니다";
+        if ((title == "Pw" || title == "Password") && value.length < 6) {
+          return "비밀번호는 6자 이상이어야 합니다";
+        }
+        return null;
+      },
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 30),
-      child: Column(
-        children: [
-          inputBox(emailController, 'Email', false),
-          SizedBox(height: 16,),
-          inputBox(pwController, 'Pw', true),
-          SizedBox(height: 16,),
-          SizedBox(
-              width: double.infinity,
-              height: 60,
-              child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xff9ABC85),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            inputBox(emailController, 'Email', false),
+            const SizedBox(height: 16),
+            inputBox(pwController, 'Pw', true),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(0, 60),
+                      backgroundColor: const Color(0xff9ABC85),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10))),
-                  onPressed: isUser ? loginBtnPressed : joinBtnPressed,
-                  child: Text(
-                    isUser ? 'Login' : 'Join',
-                    style: TextStyle(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        loginBtnPressed();
+                      }
+                    },
+                    child: Text('Login',
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
-                        fontWeight: FontWeight.w700),
-                  )))
-        ],
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 16,),
+                Expanded(
+                  flex: 1,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(0, 60),
+                      backgroundColor: const Color(0xffE5EFE7),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        joinBtnPressed();
+                      }
+                    },
+                    child: Text('Join',
+                      style: const TextStyle(
+                        color: Color(0xff8BB571),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
-
 }

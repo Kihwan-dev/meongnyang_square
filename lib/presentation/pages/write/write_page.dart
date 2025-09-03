@@ -1,73 +1,40 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:meongnyang_square/domain/entities/feed.dart';
 import 'package:meongnyang_square/presentation/pages/write/write_widgets/cropper_widget.dart';
+import 'package:meongnyang_square/presentation/providers.dart';
 import 'write_widgets/write_widget.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:meongnyang_square/data/dtos/feed_dto.dart';
-import 'package:meongnyang_square/data/data_sources/feed_remote_data_source_impl.dart';
-
-class WritePage extends StatefulWidget {
-  // 현재 피드 인덱스와 기존 피드 데이터를 선택적으로 전달받는다.
-  final int? currentFeedIndex; // 현재 피드 인덱스 (없을 수 있음)
-  final FeedDto? initialFeed;  // 기존 피드 데이터 (없을 수 있음)
-
-  const WritePage({
-    Key? key,
-    this.currentFeedIndex,
-    this.initialFeed,
-  }) : super(key: key);
+class WritePage extends ConsumerStatefulWidget {
+  WritePage({this.feed});
+  final Feed? feed;
 
   @override
-  State<WritePage> createState() => _WritePageState();
+  ConsumerState<WritePage> createState() => _WritePageState();
 }
 
-class _WritePageState extends State<WritePage> {
-  final TextEditingController tagController = TextEditingController();
-  final TextEditingController contentController = TextEditingController();
+class _WritePageState extends ConsumerState<WritePage> {
+  late final TextEditingController tagController;
+  late final TextEditingController contentController;
 
   static const int maximumLength = 200;
 
   final _picker = ImagePicker();
 
   Uint8List? _croppedImage;
-  bool _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
-    // initialFeed가 전달된 경우 태그와 내용을 미리 채운다.
-    final FeedDto? feed = widget.initialFeed;
-    if (feed != null) {
-      if (feed.tag != null) {
-        tagController.text = feed.tag!.trim();
-      }
-      if (feed.content != null) {
-        contentController.text = feed.content!.trim();
-      }
-    }
-    // -----------------------------
-    // 전달 데이터 확인용 디버그 로그 (개발 중 확인 후 제거 권장)
-    // -----------------------------
-    debugPrint('WritePage 진입 - currentFeedIndex: ${widget.currentFeedIndex}');
-    if (feed != null) {
-      debugPrint('WritePage 진입 - initialFeed.id: ${feed.id}');
-      debugPrint('WritePage 진입 - initialFeed.createdAt: ${feed.createdAt}');
-      debugPrint('WritePage 진입 - initialFeed.tag: ${feed.tag}');
-      debugPrint('WritePage 진입 - initialFeed.content: ${feed.content}');
-      debugPrint('WritePage 진입 - initialFeed.imagePath: ${feed.imagePath}');
-    } else {
-      debugPrint('WritePage 진입 - initialFeed: null');
-    }
-  }
 
-  void _showSnack(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    tagController = TextEditingController(text: widget.feed?.tag ?? "");
+    contentController = TextEditingController(text: widget.feed?.content ?? "");
   }
 
   @override
@@ -79,8 +46,14 @@ class _WritePageState extends State<WritePage> {
 
   @override
   Widget build(BuildContext context) {
+    final writeState = ref.watch(writeViewModelProvider(widget.feed));
+    final writeViewModel =
+        ref.read(writeViewModelProvider(widget.feed).notifier);
+
     return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
@@ -89,19 +62,48 @@ class _WritePageState extends State<WritePage> {
           centerTitle: true,
           title: Image.asset('assets/images/logo_s.png', width: 40, height: 20),
           actions: [
-            IconButton(
-              onPressed: _isSubmitting ? null : _submit,
-              icon: _isSubmitting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Icon(Icons.edit, color: Colors.white, size: 24),
-              tooltip: '등록',
-              splashRadius: 24,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            GestureDetector(
+              onTap: () async {
+                final uid = FirebaseAuth.instance.currentUser?.uid;
+                if (uid == null) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('로그인이 필요합니다.')),
+                  );
+                  return;
+                }
+
+                String errorMessage = await writeViewModel.saveFeed(
+                  imageData: _croppedImage,
+                  tag: tagController.text,
+                  content: contentController.text,
+                  authorId: uid,
+                );
+
+                // print(writeState.errorMessage);
+
+                if (!mounted) return;
+
+                if (errorMessage.isEmpty) {
+                  context.pop();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(errorMessage),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              child: Container(
+                width: 50,
+                height: 50,
+                child: Icon(
+                  Icons.edit,
+                  color: Colors.white,
+                  size: 25,
+                ),
+              ),
             ),
           ],
         ),
@@ -132,20 +134,29 @@ class _WritePageState extends State<WritePage> {
                             width: 120,
                             height: 120,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1E1E1E),
+                              color: Color(0xFF1E1E1E),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             alignment: Alignment.center,
-                            child: _croppedImage == null
-                                ? Image.asset(
-                                    'assets/images/icon_photo.png',
-                                    width: 35,
-                                    height: 35,
-                                  )
-                                : Image.memory(
+                            child: _croppedImage != null
+                                ? Image.memory(
                                     _croppedImage!,
                                     fit: BoxFit.cover,
-                                  ),
+                                  )
+                                : widget.feed == null
+                                    ? Image.asset(
+                                        'assets/images/icon_photo.png',
+                                        width: 35,
+                                        height: 35,
+                                      )
+                                    : CachedNetworkImage(
+                                        imageUrl: widget.feed!.imagePath,
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) => Center(
+                                          child: CircularProgressIndicator(
+                                              strokeWidth: 2),
+                                        ),
+                                      ),
                           ),
                         ),
                       ),
@@ -162,103 +173,41 @@ class _WritePageState extends State<WritePage> {
                 ),
               ],
             ),
-            Positioned(
-              left: 24,
-              bottom: 24,
-              child: FloatingActionButton(
-                heroTag: 'trashFloatingActionButton',
-                backgroundColor: const Color(0xFF2C2C2C),
-                onPressed: () {},
-                shape: const CircleBorder(),
-                child: const ImageIcon(
-                  AssetImage('assets/images/icon_trash.png'),
-                  size: 25,
-                  color: Colors.white,
-                ),
-              ),
-            ),
+            widget.feed == null
+                ? Container()
+                : Positioned(
+                    left: 24,
+                    bottom: 24,
+                    child: FloatingActionButton(
+                      heroTag: 'trashFloatingActionButton',
+                      backgroundColor: const Color(0xFF2C2C2C),
+                      onPressed: () async {
+                        //
+                        final isDeleted = await writeViewModel.deleteFeed();
+                        if (!mounted) return;
+                        if (isDeleted) {
+                          context.pop();
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("삭제 실패"),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                      shape: const CircleBorder(),
+                      child: const ImageIcon(
+                        AssetImage('assets/images/icon_trash.png'),
+                        size: 25,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
           ],
         ),
       ),
     );
-  }
-
-  Future<void> _submit() async {
-    FocusScope.of(context).unfocus();
-    if (_isSubmitting) return; // 중복 제출 방지
-
-    setState(() {
-      _isSubmitting = true;
-    });
-
-    try {
-      // 0) 입력 검증
-      final String tag = tagController.text.trim();
-      final String content = contentController.text.trim();
-
-      if (content.isEmpty) {
-        _showSnack('내용을 입력해 주세요.');
-        if (mounted) {
-          setState(() => _isSubmitting = false);
-        } else {
-          _isSubmitting = false;
-        }
-        return;
-      }
-      if (content.length > maximumLength) {
-        _showSnack('내용은 최대 $maximumLength자까지 입력할 수 있습니다.');
-        if (mounted) {
-          setState(() => _isSubmitting = false);
-        } else {
-          _isSubmitting = false;
-        }
-        return;
-      }
-
-      // 1) 이미지가 있다면 임시 파일로 저장해 업로드 경로를 확보 (DataSource가 업로드 후 URL로 치환)
-      String? imagePath;
-      if (_croppedImage != null) {
-        final dir = await Directory.systemTemp.createTemp('mn_feed_');
-        final file = File('${dir.path}/feed_${DateTime.now().millisecondsSinceEpoch}.jpg');
-        await file.writeAsBytes(_croppedImage!, flush: true);
-        imagePath = file.path; // 로컬 경로 전달 → DataSource에서 Storage 업로드
-      }
-
-      // 2) DTO 구성 (수정/신규 공용) - initialFeed가 있으면 기존 id/createdAt 유지
-      final dto = FeedDto(
-        id: widget.initialFeed?.id,
-        createdAt: widget.initialFeed?.createdAt,
-        tag: tag,
-        content: content,
-        imagePath: imagePath,  // 새 이미지가 없으면 null → DataSource에서 기존 이미지 유지 처리 권장
-      );
-
-      // 3) 저장 실행 (타임아웃 방지)
-      final feedRemoteDataSource = FeedRemoteDataSourceImpl();
-      final bool isSaved = await feedRemoteDataSource
-          .upsertFeed(dto)
-          .timeout(const Duration(seconds: 20), onTimeout: () => false);
-
-      if (!isSaved) {
-        throw Exception('업로드 또는 저장에 실패했습니다.');
-      }
-
-      if (!mounted) return;
-      // 4) 성공 처리: 현재 페이지에서 안내 후 닫기
-      _showSnack('게시글이 저장되었습니다.');
-      Navigator.of(context).pop();
-    } catch (e) {
-      if (!mounted) return;
-      _showSnack('등록 실패: $e');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSubmitting = false;
-        });
-      } else {
-        _isSubmitting = false;
-      }
-    }
   }
 
   Future<dynamic> _showImagePickerSheet(BuildContext context) {
@@ -274,7 +223,7 @@ class _WritePageState extends State<WritePage> {
               leading: Icon(Icons.photo),
               title: Text("갤러리"),
               onTap: () {
-                Navigator.pop(context);
+                context.pop();
                 _pickImage(ImageSource.gallery);
               },
             ),
@@ -282,7 +231,7 @@ class _WritePageState extends State<WritePage> {
               leading: Icon(Icons.camera_alt),
               title: Text("카메라로 촬영"),
               onTap: () {
-                Navigator.pop(context);
+                context.pop();
                 _pickImage(ImageSource.camera);
               },
             ),
@@ -304,7 +253,6 @@ class _WritePageState extends State<WritePage> {
         MaterialPageRoute(
           builder: (context) => CropperWidget(
             file: File(xFile.path),
-            aspectRatio: null,
           ),
         ),
       );
@@ -314,7 +262,7 @@ class _WritePageState extends State<WritePage> {
         _croppedImage = croppedImage;
       });
     } catch (e) {
-      debugPrint('pickImage error: $e');
+      print(e);
     }
   }
 }

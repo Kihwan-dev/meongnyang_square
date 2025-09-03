@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 import 'package:meongnyang_square/core/notifications/notification_helper.dart';
 
 /// 내 글들에 달리는 새 댓글을 감지해서 로컬 알림을 띄우는 워처
-class CommentNotificationService {
-  CommentNotificationService({required this.currentUserId});
+class NotificationService {
+  NotificationService({required this.currentUserId});
 
   final String currentUserId;
 
@@ -58,12 +57,12 @@ class CommentNotificationService {
       final lastId = _lastNotifiedCommentIdForPost[postId];
       if (lastId == cid) return;
 
-      final commenterId = data['userId'] as String?; // 댓글 작성자
-      if (commenterId == currentUserId) {
-        // 내가 내 글에 단 댓글이면 알림 X
-        _lastNotifiedCommentIdForPost[postId] = cid; // 그래도 갱신
-        return;
-      }
+      final commenterId =
+          (data['authorId'] ?? data['userId']) as String?; // 댓글 작성자
+      //if (commenterId == currentUserId) { // 내가 내 글에 단 댓글이면 알림 X
+      //_lastNotifiedCommentIdForPost[postId] = cid;
+      //  return;
+      //}
 
       final text = (data['text'] as String?) ?? '(내용 없음)';
 

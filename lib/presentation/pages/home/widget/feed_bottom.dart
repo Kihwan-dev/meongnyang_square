@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:meongnyang_square/presentation/pages/write/write_page.dart';
 import 'package:meongnyang_square/presentation/pages/comment/comment_page.dart';
 
-
 class FeedBottom extends StatelessWidget {
   final VoidCallback? onWritePressed;
   final VoidCallback? onCommentPressed;
@@ -12,15 +11,21 @@ class FeedBottom extends StatelessWidget {
     this.onWritePressed,
     this.onCommentPressed,
   });
+  const FeedBottom({super.key, required this.postId});
+  final String? postId;
+
 
   @override
   Widget build(BuildContext context) {
+
+    final canOpenComment = postId != null && postId!.isNotEmpty;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         GestureDetector(
           onTap: () {
+
             if (onWritePressed != null) {
               onWritePressed!.call();
               return;
@@ -52,6 +57,8 @@ class FeedBottom extends StatelessWidget {
               MaterialPageRoute(
                 builder: (context) => CommentPage(postId: ''), // 기본값 전달
               ),
+
+            // final id = postId!;
             );
           },
           child: Container(

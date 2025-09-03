@@ -24,7 +24,8 @@ class WritePage extends ConsumerStatefulWidget {
 class _WritePageState extends ConsumerState<WritePage> {
   late final TextEditingController tagController;
   late final TextEditingController contentController;
-  late final Debouncer? _debouncer;
+  Debouncer? debouncer;
+  bool _isInitialized = false;
 
   static const int maximumLength = 200;
 
@@ -35,52 +36,70 @@ class _WritePageState extends ConsumerState<WritePage> {
   @override
   void initState() {
     super.initState();
-    final writeViewModel = ref.read(writeViewModelProvider(widget.feed).notifier);
-    final userId = ref.watch(authViewModelProvider).user!.uid;
 
-    if (userId == widget.feed.authorId) {
-      tagController = TextEditingController(text: widget.feed.tag);
-      contentController = TextEditingController(text: widget.feed.content);
-    }
+    tagController = TextEditingController();
+    contentController = TextEditingController();
+  }
 
-    _debouncer = Debouncer(
-      duration: const Duration(seconds: 2),
-      callback: () async {
-        String? message = await writeViewModel.autoSaveFeed(
-          imageData: _croppedImage,
-          tag: tagController.text,
-          content: contentController.text,
-          currentUserId: userId,
-        );
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 한 번만 초기화를 진행하기 위해서
+    if (!_isInitialized) {
+      final userId = ref.watch(authViewModelProvider).user?.uid;
 
-        if (message != null) {
-          if (message != "") {
-            if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(message),
-                backgroundColor: Colors.green,
-              ),
+      // 수정 모드일 때만 기존 데이터로 초기화
+      if (userId != null && userId == widget.feed.authorId) {
+        tagController.text = widget.feed.tag;
+        contentController.text = widget.feed.content;
+
+        // debouncer도 수정 모드일 때만 생성
+        debouncer = Debouncer(
+          duration: const Duration(seconds: 2),
+          callback: () async {
+            final writeViewModel = ref.read(writeViewModelProvider(widget.feed).notifier);
+            final userId = ref.watch(authViewModelProvider).user!.uid;
+
+            String? message = await writeViewModel.autoSaveFeed(
+              imageData: _croppedImage,
+              tag: tagController.text,
+              content: contentController.text,
+              currentUserId: userId,
             );
-          } else {
-            //
-          }
-        }
-      },
-    );
+
+            if (message != null) {
+              if (message != "") {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(message),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+                // 자동 저장 성공 시 HomePage 새로고침
+                ref.read(homeViewModelProvider.notifier).fetchFeeds();
+              }
+            }
+          },
+        );
+      }
+
+      _isInitialized = true;
+    }
   }
 
   @override
   void dispose() {
     tagController.dispose();
     contentController.dispose();
+    debouncer?.dispose();
     super.dispose();
   }
 
   // 태그 변경 처리
   void _onTagChanged() {
     print("onTagChanged");
-    if (_debouncer == null) return;
+    if (debouncer == null) return;
     print("onTagChanged");
     final userId = ref.watch(authViewModelProvider).user!.uid;
     if (userId != widget.feed.authorId) return;
@@ -91,12 +110,12 @@ class _WritePageState extends ConsumerState<WritePage> {
       writeViewModel.setTagChanged(true);
     }
 
-    _debouncer.run();
+    debouncer!.run();
   }
 
   // 내용 변경 처리
   void _onContentChanged() {
-    if (_debouncer == null) return;
+    if (debouncer == null) return;
     final userId = ref.watch(authViewModelProvider).user!.uid;
     if (userId != widget.feed.authorId) return;
 
@@ -106,7 +125,7 @@ class _WritePageState extends ConsumerState<WritePage> {
       writeViewModel.setContentChanged(true);
     }
 
-    _debouncer.run();
+    debouncer!.run();
   }
 
   @override

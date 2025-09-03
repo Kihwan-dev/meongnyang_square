@@ -46,7 +46,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       context.go("/home/write", extra: feed);
     } else if (page == 2) {
       print("feedId : feed.id");
-      context.go("/home/comment", extra: feed.id);
+      context.go("/home/comment", extra: {"postId": feed.id, "postPath": feed.imagePath});
     }
 
     if (mounted) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meongnyang_square/domain/entities/feed.dart';
 
 class FeedBottom extends StatelessWidget {
@@ -13,9 +14,7 @@ class FeedBottom extends StatelessWidget {
         GestureDetector(
           onTap: () {
             //write페이지로 이동!
-            // Navigator.of(
-            //   context,
-            // ).push(MaterialPageRoute(builder: (context) => WritePage()));
+            context.go("/home/Writepage", extra: feed);
           },
           child: Container(
             padding: EdgeInsets.all(12),
@@ -31,9 +30,7 @@ class FeedBottom extends StatelessWidget {
         GestureDetector(
           onTap: () {
             //comment페이지로 이동!
-            // Navigator.of(
-            //   context,
-            // ).push(MaterialPageRoute(builder: (context) => CommentPage()));
+            context.go("/home/comment", extra: {"postId": feed.id, "postPath": feed.imagePath});
           },
           child: Container(
             padding: EdgeInsets.all(12),

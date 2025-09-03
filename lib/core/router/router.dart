@@ -46,9 +46,10 @@ final router = GoRouter(
             GoRoute(
               path: 'comment',
               builder: (context, state) {
-                final id = state.extra as String;
+                final extra = state.extra as Map<String, String>;
                 return CommentPage(
-                  postId: id,
+                  postId: extra["postId"]!,
+                  postPath: extra["postPath"]!,
                 );
               },
             ),

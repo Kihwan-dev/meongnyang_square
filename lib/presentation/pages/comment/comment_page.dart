@@ -35,6 +35,29 @@ class _CommentPageState extends ConsumerState<CommentPage> {
     super.dispose();
   }
 
+  Future<void> _send() async {
+    final text = commentController.text.trim();
+    if (text.isEmpty) return;
+
+    try {
+      await _col.add({
+        'text': text,
+        'createdAt': FieldValue.serverTimestamp(),
+        'clientAt': DateTime.now(),
+        //'userId': authorId,
+      });
+
+      // 전송 후 입력 지우고 포커스 제거
+      commentController.clear();
+      if (mounted) FocusScope.of(context).unfocus();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('댓글 전송 실패: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final vm = ref.watch(commentViewModelProvider(widget.postId));
@@ -45,6 +68,14 @@ class _CommentPageState extends ConsumerState<CommentPage> {
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         leading: Padding(
+          padding: EdgeInsets.all(8.0),
+          child: IconButton(
+            icon: Image.asset(
+              'assets/images/icon_back.png',
+            ),
+            onPressed: () => Navigator.of(context).maybePop(),
+          ),
+        ),
           padding: EdgeInsets.all(8.0),
           child: IconButton(
             icon: Image.asset(

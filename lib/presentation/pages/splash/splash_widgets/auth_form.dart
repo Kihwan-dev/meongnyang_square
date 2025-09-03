@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:meongnyang_square/presentation/pages/home/home_page.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meongnyang_square/presentation/pages/splash/auth_view_model.dart';
 
 // 로그인, 인포 폼
@@ -33,7 +33,7 @@ class _AuthFormState extends ConsumerState<AuthForm> {
               Text((message?.isNotEmpty ?? false) ? message! : '문제가 발생했습니다.'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => context.pop(),
               child: const Text('닫기'),
             ),
           ],
@@ -49,11 +49,7 @@ class _AuthFormState extends ConsumerState<AuthForm> {
           .read(authViewModelProvider.notifier)
           .login(emailController.text, pwController.text);
       if (!mounted) return;
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomePage(),
-          ));
+      context.go('/homepage');
     } catch (e) {
       emailController.clear();
       pwController.clear();
@@ -69,11 +65,7 @@ class _AuthFormState extends ConsumerState<AuthForm> {
           .read(authViewModelProvider.notifier)
           .join(emailController.text, pwController.text);
       if (!mounted) return;
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomePage(),
-          ));
+      context.go('/homepage');
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
         showErrorPopup(message: '이미 사용중인 이메일입니다.');
@@ -120,8 +112,6 @@ class _AuthFormState extends ConsumerState<AuthForm> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(authViewModelProvider);
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 30),
       child: Form(

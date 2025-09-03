@@ -1,8 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meongnyang_square/core/router/router.dart';
 import 'package:meongnyang_square/firebase_options.dart';
-import 'package:meongnyang_square/presentation/pages/splash/splash_page.dart';
 import 'package:meongnyang_square/core/notifications/notification_helper.dart';
 
 void main() async {
@@ -19,7 +19,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
+      routerConfig: router,
       themeMode: ThemeMode.dark,
       theme: ThemeData(
         brightness: Brightness.light,
@@ -28,8 +29,7 @@ class MyApp extends StatelessWidget {
       darkTheme: ThemeData(
         brightness: Brightness.dark,
         fontFamily: 'SCDream',
-      ),
-      home: SplashPage(),
+      )
     );
   }
 }

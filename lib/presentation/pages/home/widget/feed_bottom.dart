@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:meongnyang_square/presentation/pages/write/write_page.dart';
+import 'package:meongnyang_square/presentation/pages/comment/comment_page.dart';
 
 class FeedBottom extends StatelessWidget {
+  final VoidCallback? onWritePressed;
+  final VoidCallback? onCommentPressed;
+
+  const FeedBottom({
+    super.key,
+    this.onWritePressed,
+    this.onCommentPressed,
+  });
   const FeedBottom({super.key, required this.postId});
   final String? postId;
-  const FeedBottom({super.key, required this.postId});
-  final String? postId;
+
 
   @override
   Widget build(BuildContext context) {
-    final canOpenComment = postId != null && postId!.isNotEmpty;
 
     final canOpenComment = postId != null && postId!.isNotEmpty;
 
@@ -18,8 +25,15 @@ class FeedBottom extends StatelessWidget {
       children: [
         GestureDetector(
           onTap: () {
-            Navigator.of(context)
-                .push(MaterialPageRoute(builder: (context) => WritePage()));
+
+            if (onWritePressed != null) {
+              onWritePressed!.call();
+              return;
+            }
+            // 기본 동작: WritePage로 이동
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => WritePage()),
+            );
           },
           child: Container(
             padding: EdgeInsets.all(12),
@@ -34,9 +48,17 @@ class FeedBottom extends StatelessWidget {
         ),
         GestureDetector(
           onTap: () {
-            final id = postId!;
+            if (onCommentPressed != null) {
+              onCommentPressed!.call();
+              return;
+            }
+            // 기본 동작: CommentPage로 이동
             Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => CommentPage(postId: id)),
+              MaterialPageRoute(
+                builder: (context) => CommentPage(postId: ''), // 기본값 전달
+              ),
+
+            // final id = postId!;
             );
           },
           child: Container(

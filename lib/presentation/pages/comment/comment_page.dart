@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -16,6 +17,8 @@ class CommentPage extends ConsumerStatefulWidget {
 class _CommentPageState extends ConsumerState<CommentPage> {
   final commentController = TextEditingController();
   final textFieldFocus = FocusNode();
+
+  CollectionReference<Map<String, dynamic>> get _col => FirebaseFirestore.instance.collection("feeds").doc(widget.postId).collection("comments");
 
   @override
   void initState() {
@@ -76,16 +79,6 @@ class _CommentPageState extends ConsumerState<CommentPage> {
             onPressed: () => Navigator.of(context).maybePop(),
           ),
         ),
-          padding: EdgeInsets.all(8.0),
-          child: IconButton(
-            icon: Image.asset(
-              'assets/images/icon_back.png',
-            ),
-            onPressed: () => Navigator.of(context).maybePop(),
-          ),
-        ),
-        centerTitle: true,
-        title: Image.asset('assets/images/logo_s.png', width: 40, height: 20),
       ),
       body: Container(
         height: double.infinity,
@@ -107,8 +100,7 @@ class _CommentPageState extends ConsumerState<CommentPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("comments",
-                        style: TextStyle(color: Colors.white)),
+                    const Text("comments", style: TextStyle(color: Colors.white)),
                     const SizedBox(height: 20),
                     Expanded(child: _buildCommentList(vm)),
                   ],
@@ -133,8 +125,7 @@ class _CommentPageState extends ConsumerState<CommentPage> {
     }
     if (vm.error != null) {
       return Center(
-        child: Text('오류 : ${vm.error}',
-            style: const TextStyle(color: Colors.white)),
+        child: Text('오류 : ${vm.error}', style: const TextStyle(color: Colors.white)),
       );
     }
     if (vm.comments.isEmpty) {
@@ -191,8 +182,7 @@ class _CommentPageState extends ConsumerState<CommentPage> {
                     child: Text(
                       shownTime == null ? '보내는 중…' : _formatExact(shownTime),
                       textAlign: TextAlign.end,
-                      style:
-                          TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                     ),
                   ),
                 ],
@@ -252,9 +242,7 @@ class _CommentPageState extends ConsumerState<CommentPage> {
                           decoration: InputDecoration(
                             hintText: focused ? "" : "댓글을 입력하세요",
                             hintStyle: TextStyle(
-                              color: focused
-                                  ? Colors.black38
-                                  : Colors.white.withOpacity(0.6),
+                              color: focused ? Colors.black38 : Colors.white.withOpacity(0.6),
                             ),
                             border: InputBorder.none,
                           ),
@@ -265,8 +253,7 @@ class _CommentPageState extends ConsumerState<CommentPage> {
                       SizedBox(width: 20),
                       GestureDetector(
                         onTap: () async {
-                          final err =
-                              await notifier.addComment(commentController.text);
+                          final err = await notifier.addComment(commentController.text);
                           if (!mounted) return;
                           if (err == null) {
                             commentController.clear();

@@ -102,18 +102,20 @@ class _FeedPageState extends State<FeedPage> {
   // WritePage로 화면 전환
   // RouteSettings.arguments로 단일 Feed 객체를 전달
   // feed가 null인 경우에는 WritePage에서 빈 상태로 처리하도록 넘김
-  Future<void> _openWritePage(Feed? feed) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => WritePage(),
-        settings: RouteSettings(
-          arguments: {
-            'feed': feed,
-          },
-        ),
-      ),
-    );
-  }
+
+  // TODO
+  // Future<void> _openWritePage(Feed? feed) async {
+  //   await Navigator.of(context).push(
+  //     MaterialPageRoute(
+  //       builder: (_) => WritePage(),
+  //       settings: RouteSettings(
+  //         arguments: {
+  //           'feed': feed,
+  //         },
+  //       ),
+  //     ),
+  //   );
+  // }
 
   // CommentPage로 화면 전환
   // postId에는 feed.id를 그대로 전달
@@ -167,7 +169,7 @@ class _FeedPageState extends State<FeedPage> {
     // 2) 피드가 하나도 없으면 null을 전달하고 종료
     if (items.isEmpty) {
       _logWriteArguments(null, 0);
-      await _openWritePage(null);
+      // await _openWritePage(null);
       return;
     }
 
@@ -179,7 +181,7 @@ class _FeedPageState extends State<FeedPage> {
     _logWriteArguments(currentFeed, currentIndex);
 
     // 5) 화면 전환: 현재 피드만 arguments로 전달
-    await _openWritePage(currentFeed);
+    // await _openWritePage(currentFeed);
   }
 
   Future<void> onPageSwipe(int page) async {

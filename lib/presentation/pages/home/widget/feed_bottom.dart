@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-
 class FeedBottom extends StatelessWidget {
+  const FeedBottom({super.key, required this.postId});
+  final String? postId;
   const FeedBottom({super.key, required this.postId});
   final String? postId;
 
@@ -10,12 +11,15 @@ class FeedBottom extends StatelessWidget {
   Widget build(BuildContext context) {
     final canOpenComment = postId != null && postId!.isNotEmpty;
 
+    final canOpenComment = postId != null && postId!.isNotEmpty;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         GestureDetector(
           onTap: () {
-            context.push('/homepage/writepage');
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (context) => WritePage()));
           },
           child: Container(
             padding: EdgeInsets.all(12),
@@ -30,14 +34,10 @@ class FeedBottom extends StatelessWidget {
         ),
         GestureDetector(
           onTap: () {
-            final openComment = postId != null && postId!.isNotEmpty;
-            if (!canOpenComment) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('댓글을 열 수 없는 게시글입니다.')),
-              );
-              return;
-            }
-            context.push('/homepage/comment/${postId!}');
+            final id = postId!;
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => CommentPage(postId: id)),
+            );
           },
           child: Container(
             padding: EdgeInsets.all(12),

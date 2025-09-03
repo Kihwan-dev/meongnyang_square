@@ -1,82 +1,83 @@
 import 'package:flutter/material.dart';
-import 'package:meongnyang_square/presentation/pages/home/widget/feed_page.dart';
-import 'package:meongnyang_square/presentation/pages/home/home_view_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meongnyang_square/presentation/pages/home/widget/feed_bottom.dart';
+import 'package:meongnyang_square/presentation/pages/home/widget/feed_center.dart';
+import 'package:meongnyang_square/presentation/pages/home/widget/feed_top.dart';
+import 'package:meongnyang_square/presentation/pages/home/widget/origin_feed_page.dart';
+import 'package:meongnyang_square/presentation/pages/home/origin_home_view_model.dart';
 import 'package:meongnyang_square/domain/entities/feed.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
-  late final HomeViewModel _viewModel;
-
-  // 현재 ViewModel의 피드 리스트가 FeedDto이든 Feed이든, Feed 리스트로 변환
-  List<Feed>? _convertToFeedList(dynamic source) {
-    if (source == null) return null;
-    if (source is List<Feed>) return source;
-    if (source is List) {
-      return source.map<Feed>((item) {
-        if (item is Feed) return item;
-        final dynamic d = item; // FeedDto와 유사한 구조를 가정
-        final String id = (d.id ?? '').toString();
-        final dynamic rawCreatedAt = d.createdAt;
-        DateTime createdAt;
-        if (rawCreatedAt is DateTime) {
-          createdAt = rawCreatedAt;
-        } else if (rawCreatedAt is int) {
-          // 밀리초 타임스탬프 가정
-          createdAt = DateTime.fromMillisecondsSinceEpoch(rawCreatedAt);
-        } else {
-          createdAt = DateTime.fromMillisecondsSinceEpoch(0);
-        }
-        final String tag = (d.tag ?? '').toString();
-        final String content = (d.content ?? '').toString();
-        final String imagePath = (d.imagePath ?? '').toString();
-        final String authorId = (d.authorId ?? '').toString();
-        return Feed(
-          id: id,
-          createdAt: createdAt,
-          tag: tag,
-          content: content,
-          imagePath: imagePath,
-          authorId: authorId,
-        );
-      }).toList();
-    }
-    return null;
-  }
+class _HomePageState extends ConsumerState<HomePage> {
+  late PageController pageController;
+  bool isSwiping = false;
 
   @override
   void initState() {
     super.initState();
-    _viewModel = HomeViewModel(oldestFirst: true, limit: 30);
-    _viewModel.start();
+    pageController = PageController(initialPage: 1);
   }
 
   @override
   void dispose() {
-    _viewModel.dispose();
+    pageController.dispose();
     super.dispose();
+  }
+
+  //스와이프 시 이동
+  onPageSwipe(int page) async {
+    if (page == 1) return;
+    if (isSwiping) return;
+    isSwiping = true;
+
+    if (page == 0) {
+      // await Navigator.of(
+      //   context,
+      // ).push(MaterialPageRoute(builder: (context) => WritePage()));
+    } else if (page == 2) {
+      // await Navigator.of(
+      //   context,
+      // ).push(MaterialPageRoute(builder: (context) => CommentPage()));
+    }
+
+    if (mounted) {
+      pageController.animateToPage(1, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+    }
+    isSwiping = false;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: AnimatedBuilder(
-        animation: _viewModel, 
-        builder: (context, _) {
-          return FeedPage(
-            feeds: _convertToFeedList(_viewModel.feeds),
-            onEndReached: _viewModel.loadMore,
-            isLoadingMore: _viewModel.isLoadingMore,
-            hasMore: _viewModel.hasMore,
-            onRefresh: _viewModel.refresh,
-          );
-        },
-      ),
+    return PageView(
+      scrollDirection: Axis.horizontal,
+      controller: pageController,
+      onPageChanged: onPageSwipe,
+      children: [
+        const Text('Write 페이지로 이동'),
+        //feed본문
+        Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/sample01.png'),
+              fit: BoxFit.cover,
+              opacity: 0.6,
+            ),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(30),
+              child: Column(children: [FeedTop(), FeedCenter(), FeedBottom()]),
+            ),
+          ),
+        ),
+        const Text('Comment 페이지로 이동'),
+      ],
     );
   }
 }

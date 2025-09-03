@@ -56,4 +56,24 @@ class FeedRemoteDataSourceImpl implements FeedRemoteDataSource {
               };
             }).toList());
   }
+
+  @override
+  Future<(List<FeedDto>, DocumentSnapshot?)> fetchFeeds({
+    int limit = 10,
+    DocumentSnapshot? lastDoc,
+  }) async {
+    Query query = _firestore.collection('feeds').orderBy('createdAt', descending: true).limit(limit);
+
+    if (lastDoc != null) {
+      query = query.startAfterDocument(lastDoc);
+    }
+
+    final snapshot = await query.get();
+
+    final dtos = snapshot.docs.map((doc) {
+      return FeedDto.fromJson(doc.data() as Map<String, dynamic>);
+    }).toList();
+
+    return (dtos, snapshot.docs.isNotEmpty ? snapshot.docs.last : null);
+  }
 }

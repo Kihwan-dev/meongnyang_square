@@ -16,6 +16,7 @@ class FeedRemoteDataSourceImpl implements FeedRemoteDataSource {
         "tag": dto.tag ?? "",
         "content": dto.content ?? "",
         "imagePath": dto.imagePath ?? "",
+        "authorId": dto.authorId ?? "",
       });
 
       return true;

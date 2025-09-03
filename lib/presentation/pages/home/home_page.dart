@@ -5,6 +5,7 @@ import 'package:meongnyang_square/presentation/pages/home/widget/feed_bottom.dar
 import 'package:meongnyang_square/presentation/pages/home/widget/feed_center.dart';
 import 'package:meongnyang_square/presentation/pages/home/widget/feed_top.dart';
 import 'package:meongnyang_square/presentation/providers.dart';
+import 'package:go_router/go_router.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -21,6 +22,9 @@ class _HomePageState extends ConsumerState<HomePage> {
   void initState() {
     super.initState();
     pageController = PageController(initialPage: 1);
+    Future.microtask(() {
+      ref.read(homeViewModelProvider.notifier).fetchFeeds();
+    });
   }
 
   @override
@@ -30,19 +34,19 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   //스와이프 시 이동
-  onPageSwipe(int page) async {
+  onPageSwipe(int page, int currentFeedIndex) async {
     if (page == 1) return;
     if (isSwiping) return;
     isSwiping = true;
+    final homeState = ref.read(homeViewModelProvider);
+    final feeds = homeState.feeds;
+    final feed = feeds[currentFeedIndex];
 
     if (page == 0) {
-      // await Navigator.of(
-      //   context,
-      // ).push(MaterialPageRoute(builder: (context) => WritePage()));
+      context.go("/home/write", extra: feed);
     } else if (page == 2) {
-      // await Navigator.of(
-      //   context,
-      // ).push(MaterialPageRoute(builder: (context) => CommentPage()));
+      print("feedId : feed.id");
+      context.go("/home/comment", extra: feed.id);
     }
 
     if (mounted) {
@@ -66,7 +70,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           return PageView(
             scrollDirection: Axis.horizontal,
             controller: pageController,
-            onPageChanged: onPageSwipe,
+            onPageChanged: (page) => onPageSwipe(page, index),
             children: [
               const Text('Write 페이지로 이동'),
               //feed본문

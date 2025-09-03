@@ -29,7 +29,6 @@ class HomeState {
 class HomeViewModel extends Notifier<HomeState> {
   @override
   HomeState build() {
-    fetchFeeds();
     return HomeState(feeds: []);
   }
 

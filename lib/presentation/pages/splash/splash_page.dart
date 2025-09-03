@@ -12,8 +12,7 @@ class SplashPage extends ConsumerStatefulWidget {
   ConsumerState<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends ConsumerState<SplashPage>
-    with SingleTickerProviderStateMixin {
+class _SplashPageState extends ConsumerState<SplashPage> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
@@ -36,35 +35,27 @@ class _SplashPageState extends ConsumerState<SplashPage>
     );
 
     _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.0, 0.5, curve: Curves.easeIn)),
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.5, curve: Curves.easeIn)),
     );
 
     _scaleAnimation = Tween<double>(begin: 0.7, end: 1.0).animate(
-      CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.0, 0.6, curve: Curves.easeOutBack)),
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.6, curve: Curves.easeOutBack)),
     );
 
     //위로 이동
     _translateY = Tween<double>(begin: 0.0, end: -50.0).animate(
-      CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.6, 1.0, curve: Curves.easeOutCubic)),
+      CurvedAnimation(parent: _controller, curve: const Interval(0.6, 1.0, curve: Curves.easeOutCubic)),
     );
 
     //페이드 인
     _loginFade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.7, 1.0, curve: Curves.easeIn)),
+      CurvedAnimation(parent: _controller, curve: const Interval(0.7, 1.0, curve: Curves.easeIn)),
     );
 
     _controller.forward();
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed && mounted && _hasSession) {
-        context.go('/homepage');
+        context.go('/home');
       }
     });
     checkSessionRoute();
@@ -80,7 +71,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
     if (fUser != null) {
       vm.setSessionUser(AuthUser(uid: fUser.uid, email: fUser.email));
       _hasSession = true;
-      if (mounted) context.go('/homepage');
+      if (mounted) context.go('/home');
     } else {
       vm.setSessionUser(null);
       setState(() => checkingSession = false);
@@ -113,8 +104,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
                         offset: Offset(0, _translateY.value),
                         child: ScaleTransition(
                           scale: _scaleAnimation,
-                          child:
-                              Image.asset('assets/images/logo.png', width: 116),
+                          child: Image.asset('assets/images/logo.png', width: 116),
                         ),
                       ),
                     ),

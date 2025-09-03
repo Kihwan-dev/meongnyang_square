@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:meongnyang_square/domain/entities/feed.dart';
-import 'package:meongnyang_square/data/dtos/feed_dto.dart';
 import 'package:meongnyang_square/presentation/pages/comment/comment_page.dart';
 import 'package:meongnyang_square/presentation/pages/home/widget/feed_bottom.dart';
 import 'package:meongnyang_square/presentation/pages/home/widget/feed_center.dart';
@@ -96,10 +95,20 @@ class _FeedPageState extends State<FeedPage> {
 
     // 2) 현재 인덱스의 피드를 안전하게 가져오기
     final List<Feed> items = widget.feeds ?? const <Feed>[];
+    // 피드가 없을 때: null 값을 WritePage로 전달
     if (items.isEmpty) {
-      // 데이터가 없으면 파라미터 없이 이동(기존 동작 유지)
+      // ignore: avoid_print
+      print('[FeedPage→WritePage] feeds=0, currentIndex=0');
+      // 전체 피드를 Feed(도메인) 리스트로 전달
       await Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const WritePage()),
+        MaterialPageRoute(
+          builder: (_) => WritePage(),
+          settings: const RouteSettings(
+            arguments: {
+              'feed': null, // 현재 페이지가 없으므로 null 전달
+            },
+          ),
+        ),
       );
       return;
     }
@@ -107,18 +116,23 @@ class _FeedPageState extends State<FeedPage> {
     if (currentIndex >= items.length) currentIndex = items.length - 1;
     final Feed currentFeed = items[currentIndex];
 
-    // 3) WritePage로 이동 (현재 인덱스 + 피드 전체 데이터 전달)
+    // 현재 페이지의 Feed 정보를 디버그 로그로 출력
+    // ignore: avoid_print
+    print('[FeedPage→WritePage] currentFeed(index=$currentIndex): '
+        'id=${currentFeed.id}, tag=${currentFeed.tag}, '
+        'content=${currentFeed.content}, createdAt=${currentFeed.createdAt}, '
+        'imagePath=${currentFeed.imagePath}, authorId=${currentFeed.authorId}');
+
+    // ignore: avoid_print
+    //print('[FeedPage→WritePage] feeds=${items.length}, currentIndex=$currentIndex, currentFeedId=${currentFeed.id}');
+    // 현재 페이지의 Feed 객체를 WritePage로 전달
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => WritePage(
-          currentFeedIndex: currentIndex,
-          initialFeed: FeedDto(
-            id: currentFeed.id,
-            createdAt: currentFeed.createdAt,
-            tag: currentFeed.tag,
-            content: currentFeed.content,
-            imagePath: currentFeed.imagePath,
-          ),
+        builder: (context) => WritePage(), // WritePage는 수정 불가 → 인자 없이 호출
+        settings: RouteSettings(
+          arguments: {
+            'feed': currentFeed, // 현재 페이지의 단일 Feed만 전달
+          },
         ),
       ),
     );
@@ -129,10 +143,13 @@ class _FeedPageState extends State<FeedPage> {
     if (isSwiping) return;
     isSwiping = true;
 
+    // 왼쪽 스와이프 시 → WritePage로 이동
     if (page == 0) {
       await _goToWriteWithCurrentFeed();
-    } else if (page == 2) {
-      final items = widget.feeds ?? const <FeedDto>[];
+    }
+    // 오른쪽 스와이프 시 → CommentPage로 이동
+    else if (page == 2) {
+      final List<Feed> items = widget.feeds ?? const <Feed>[];
       if (items.isNotEmpty) {
         final idx = verticalController.hasClients
             ? (verticalController.page?.round() ?? 0)
@@ -141,15 +158,20 @@ class _FeedPageState extends State<FeedPage> {
         final feed = items[safeIdx];
         final id = feed.id;
         if (id != null && id.isNotEmpty) {
+          // 현재 페이지 Feed의 feedId, authId 값을 디버그 로그로 출력하고 CommentPage로 전달
+          // ignore: avoid_print
+          print('[FeedPage→CommentPage] index=$safeIdx, feedId=$id, authId=${feed.authorId ?? ''}');
           await Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => CommentPage(postId: id)),
+            MaterialPageRoute(
+              builder: (_) => CommentPage(postId: id),
+              settings: RouteSettings(
+                arguments: {
+                  'authId': feed.authorId ?? '',
+                  'feedId': id,
+                },
+              ),
+            ),
           );
-        } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('이 피드의 ID가 없어 댓글 페이지를 열 수 없어요.')),
-            );
-          }
         }
       } else {
         // 피드가 없을 때는 그냥 무시
@@ -223,8 +245,29 @@ class _FeedPageState extends State<FeedPage> {
                 ),
                 const SizedBox(height: 16),
                 FeedBottom(
+                  // 글쓰기 아이콘 눌렀을 때 → WritePage로 이동
                   onWritePressed: () async {
                     await _goToWriteWithCurrentFeed();
+                  },
+                  // 코멘트 아이콘 눌렀을 때 → CommentPage로 이동 (feedId, authId 전달)
+                  onCommentPressed: () async {
+                    final String? id = feed.id;
+                    if (id != null && id.isNotEmpty) {
+                      // 디버그: 코멘트 아이콘 탭
+                      // ignore: avoid_print
+                      print('[FeedBottom→CommentPage] feedId=$id, authId=${feed.authorId ?? ''}');
+                      await Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => CommentPage(postId: id),
+                          settings: RouteSettings(
+                            arguments: {
+                              'authId': feed.authorId ?? '',
+                              'feedId': id,
+                            },
+                          ),
+                        ),
+                      );
+                    }
                   },
                 ),
               ],
@@ -245,16 +288,20 @@ class _FeedPageState extends State<FeedPage> {
           opacity: 0.60,
         ),
       ),
-      child: const SafeArea(
+      child: SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(30),
+          padding: const EdgeInsets.all(30),
           child: Column(
             children: [
-              FeedTop(),
-              SizedBox(height: 16),
-              FeedCenter(),
-              SizedBox(height: 16),
-              FeedBottom(postId: null),
+              const FeedTop(),
+              const SizedBox(height: 16),
+              const FeedCenter(),
+              const SizedBox(height: 16),
+              FeedBottom(
+                onWritePressed: () async {
+                  await _goToWriteWithCurrentFeed();
+                },
+              ),
             ],
           ),
         ),

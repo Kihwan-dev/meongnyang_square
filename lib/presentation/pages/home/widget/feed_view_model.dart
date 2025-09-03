@@ -1,66 +1,159 @@
-
-
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:meongnyang_square/domain/entities/feed.dart';
-import 'package:meongnyang_square/data/dtos/feed_dto.dart';
+import 'package:meongnyang_square/presentation/pages/write/write_page.dart';
+import 'package:meongnyang_square/presentation/pages/comment/comment_page.dart';
 
-/// 피드 화면용 ViewModel: 현재 피드 인덱스와 목록을 관리하고
-/// UI가 필요로 하는 형태(Feed, FeedDto)로 안전하게 제공한다.
-class FeedViewModel extends ChangeNotifier {
-  FeedViewModel({List<Feed>? initialFeeds, int initialIndex = 0})
-      : _feeds = initialFeeds ?? <Feed>[],
-        _currentIndex = initialIndex;
+class FeedPage extends StatefulWidget {
+  @override
+  _FeedPageState createState() => _FeedPageState();
+}
 
-  List<Feed> _feeds;
-  int _currentIndex;
+class _FeedPageState extends State<FeedPage> {
+  List<Feed> items = [];
 
-  /// 전체 피드 목록 반환
-  List<Feed> get feeds => _feeds;
+  Future<void> _goToWriteWithCurrentFeed() async {
+    if (items.isEmpty) {
+      // 피드가 없을 때: null 전달
+      print('[FeedPage→WritePage] currentFeed(index=0): null');
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => WritePage(),
+          // 현재 페이지의 Feed 하나만 전달
+          settings: const RouteSettings(
+            arguments: {
+              'feed': null,
+            },
+          ),
+        ),
+      );
+    } else {
+      // 인덱스 0번을 기본으로 사용
+      final int currentIndex = 0;
+      final Feed currentFeed = items[currentIndex];
+      // 현재 페이지(여기서는 index=0)의 Feed를 로그로 출력
+      print('[FeedPage→WritePage] currentFeed(index=$currentIndex): '
+          'id=${currentFeed.id}, tag=${currentFeed.tag}, '
+          'content=${currentFeed.content}, createdAt=${currentFeed.createdAt}, '
+          'imagePath=${currentFeed.imagePath}, authorId=${currentFeed.authorId}');
 
-  /// 현재 선택된 인덱스 반환
-  int get currentIndex => _currentIndex;
-
-  /// 피드가 하나 이상 있는지
-  bool get hasFeeds => _feeds.isNotEmpty;
-
-  /// 현재 선택된 피드 반환 (없을 수 있음)
-  Feed? get currentFeed {
-    if (_feeds.isEmpty) return null;
-    final int safeIndex = _currentIndex.clamp(0, _feeds.length - 1);
-    return _feeds[safeIndex];
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => WritePage(),
+          // 현재 페이지의 Feed 하나만 전달
+          settings: RouteSettings(
+            arguments: {
+              'feed': currentFeed, // 현재 페이지의 단일 Feed만 전달
+            },
+          ),
+        ),
+      );
+    }
   }
 
-  /// 현재 선택된 피드를 WritePage에서 사용하기 좋은 FeedDto로 변환하여 반환
-  FeedDto? get currentFeedAsDto {
-    final Feed? source = currentFeed;
-    if (source == null) return null;
-    return FeedDto(
-      id: source.id,
-      createdAt: source.createdAt,
-      tag: source.tag,
-      content: source.content,
-      imagePath: source.imagePath,
+  // 카드별(개별 아이템)로 WritePage 이동
+  Future<void> _goToWriteWithFeed(Feed feed) async {
+    // 선택된 피드 정보를 로그로 출력
+    print('[FeedPage→WritePage] currentFeed(index=?): '
+        'id=${feed.id}, tag=${feed.tag}, '
+        'content=${feed.content}, createdAt=${feed.createdAt}, '
+        'imagePath=${feed.imagePath}, authorId=${feed.authorId}');
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => WritePage(),
+        // 현재 페이지의 Feed 하나만 전달
+        settings: RouteSettings(
+          arguments: {
+            'feed': feed, // 탭한 카드의 Feed만 전달
+          },
+        ),
+      ),
     );
   }
 
-  /// 피드 목록을 교체
-  void setFeeds(List<Feed> newFeeds) {
-    _feeds = newFeeds;
-    if (_feeds.isEmpty) {
-      _currentIndex = 0;
-    } else if (_currentIndex >= _feeds.length) {
-      _currentIndex = _feeds.length - 1;
-    }
-    notifyListeners();
+  Future<void> _goToCommentWithFeed(Feed feed) async {
+    print('[FeedPage→CommentPage] feedId=${feed.id}, authId=${feed.authorId}');
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CommentPage(postId: feed.id),
+        settings: RouteSettings(
+          arguments: {
+            'authId': feed.authorId,
+            'feedId': feed.id,
+          },
+        ),
+      ),
+    );
   }
 
-  /// 현재 선택된 인덱스를 변경
-  void setCurrentIndex(int index) {
-    if (_feeds.isEmpty) {
-      _currentIndex = 0;
-    } else {
-      _currentIndex = index.clamp(0, _feeds.length - 1);
+  Widget _buildPost(Feed feed) {
+    return ListTile(
+      title: Text(feed.content),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.comment),
+            onPressed: () async {
+              // ignore: avoid_print
+              print('Comment pressed for feed id: ${feed.id}');
+              await _goToCommentWithFeed(feed);
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () async {
+              // ignore: avoid_print
+              print('Write pressed for feed id: ${feed.id}');
+              await _goToWriteWithFeed(feed);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void onPageSwipe(int page) {
+    if (page == 0) {
+      print('Page 0 swiped, going to write page');
+      _goToWriteWithCurrentFeed();
     }
-    notifyListeners();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: GestureDetector(
+        onHorizontalDragEnd: (details) {
+          final v = details.primaryVelocity;
+          if (v == null) return;
+          if (v < 0) {
+            // 왼쪽 스와이프 → WritePage
+            // ignore: avoid_print
+            print('[FeedPage] left swipe to WritePage');
+            _goToWriteWithCurrentFeed();
+          } else if (v > 0) {
+            // 오른쪽 스와이프 → CommentPage (현재 화면의 피드 하나 선택)
+            if (items.isNotEmpty) {
+              final Feed feed = items.first;
+              // ignore: avoid_print
+              print('[FeedPage] right swipe to CommentPage');
+              _goToCommentWithFeed(feed);
+            }
+          }
+        },
+        child: ListView(
+          children: items.map(_buildPost).toList(),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          // ignore: avoid_print
+          print('[FeedBottom] write icon tapped');
+          await _goToWriteWithCurrentFeed();
+        },
+        child: const Icon(Icons.edit),
+      ),
+    );
   }
 }

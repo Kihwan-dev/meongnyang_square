@@ -129,7 +129,6 @@ class HomeViewModel extends ChangeNotifier {
     final queryRealtime = _firestore
         .collection('feeds')
         .orderBy('createdAt', descending: true);
-        .orderBy('createdAt', descending: true);
 
     _subscription = queryRealtime.snapshots().listen(
       (snapshot) {

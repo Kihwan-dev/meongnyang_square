@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:meongnyang_square/presentation/pages/write/write_page.dart';
+import 'package:meongnyang_square/presentation/pages/comment/comment_page.dart';
 
 
 class FeedBottom extends StatelessWidget {
@@ -14,7 +15,6 @@ class FeedBottom extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final canOpenComment = postId != null && postId!.isNotEmpty;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -49,7 +49,9 @@ class FeedBottom extends StatelessWidget {
             }
             // 기본 동작: CommentPage로 이동
             Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => CommentPage()),
+              MaterialPageRoute(
+                builder: (context) => CommentPage(postId: ''), // 기본값 전달
+              ),
             );
           },
           child: Container(

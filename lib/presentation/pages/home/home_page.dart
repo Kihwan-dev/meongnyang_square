@@ -35,12 +35,14 @@ class _HomePageState extends State<HomePage> {
         final String tag = (d.tag ?? '').toString();
         final String content = (d.content ?? '').toString();
         final String imagePath = (d.imagePath ?? '').toString();
+        final String authorId = (d.authorId ?? '').toString();
         return Feed(
           id: id,
           createdAt: createdAt,
           tag: tag,
           content: content,
           imagePath: imagePath,
+          authorId: authorId,
         );
       }).toList();
     }

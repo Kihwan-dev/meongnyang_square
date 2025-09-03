@@ -54,30 +54,51 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return PageView(
-      scrollDirection: Axis.horizontal,
-      controller: pageController,
-      onPageChanged: onPageSwipe,
-      children: [
-        const Text('Write 페이지로 이동'),
-        //feed본문
-        Container(
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/images/sample01.png'),
-              fit: BoxFit.cover,
-              opacity: 0.6,
+    Feed dummyFeed = Feed(
+      authorId: "authorId",
+      content: "content",
+      createdAt: DateTime.now(),
+      id: "id",
+      imagePath: "https://picsum.photos/200/300",
+      tag: "tag",
+    );
+
+    return Scaffold(
+      body: PageView.builder(
+        scrollDirection: Axis.vertical,
+        itemCount: 10,
+        itemBuilder: (context, index) => PageView(
+          scrollDirection: Axis.horizontal,
+          controller: pageController,
+          onPageChanged: onPageSwipe,
+          children: [
+            const Text('Write 페이지로 이동'),
+            //feed본문
+            Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/sample01.png'),
+                  fit: BoxFit.cover,
+                  opacity: 0.6,
+                ),
+              ),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(30),
+                  child: Column(
+                    children: [
+                      FeedTop(DateTime.now()),
+                      FeedCenter(tag: "tag", content: "content"),
+                      FeedBottom(dummyFeed),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(30),
-              child: Column(children: [FeedTop(), FeedCenter(), FeedBottom()]),
-            ),
-          ),
+            const Text('Comment 페이지로 이동'),
+          ],
         ),
-        const Text('Comment 페이지로 이동'),
-      ],
+      ),
     );
   }
 }

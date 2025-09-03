@@ -1,16 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:meongnyang_square/presentation/pages/write/write_page.dart';
-import 'package:meongnyang_square/presentation/pages/comment/comment_page.dart';
+import 'package:meongnyang_square/domain/entities/feed.dart';
 
 class FeedBottom extends StatelessWidget {
-  final VoidCallback? onWritePressed;
-  final VoidCallback? onCommentPressed;
-
-  const FeedBottom({
-    super.key,
-    this.onWritePressed,
-    this.onCommentPressed,
-  });
+  FeedBottom(this.feed);
+  final Feed feed;
 
   @override
   Widget build(BuildContext context) {
@@ -19,14 +12,10 @@ class FeedBottom extends StatelessWidget {
       children: [
         GestureDetector(
           onTap: () {
-            if (onWritePressed != null) {
-              onWritePressed!.call();
-              return;
-            }
-            // 기본 동작: WritePage로 이동
-            // Navigator.of(context).push(
-            //   MaterialPageRoute(builder: (context) => WritePage()),
-            // );
+            //write페이지로 이동!
+            // Navigator.of(
+            //   context,
+            // ).push(MaterialPageRoute(builder: (context) => WritePage()));
           },
           child: Container(
             padding: EdgeInsets.all(12),
@@ -41,18 +30,10 @@ class FeedBottom extends StatelessWidget {
         ),
         GestureDetector(
           onTap: () {
-            if (onCommentPressed != null) {
-              onCommentPressed!.call();
-              return;
-            }
-            // 기본 동작: CommentPage로 이동
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => CommentPage(postId: ''), // 기본값 전달
-              ),
-
-              // final id = postId!;
-            );
+            //comment페이지로 이동!
+            // Navigator.of(
+            //   context,
+            // ).push(MaterialPageRoute(builder: (context) => CommentPage()));
           },
           child: Container(
             padding: EdgeInsets.all(12),

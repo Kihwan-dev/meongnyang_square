@@ -41,8 +41,7 @@ final authDataSourceProvider = Provider(
 // Auth인증-Repository
 final authRepositoryProvider = Provider<AuthRepository>(
   (ref) {
-    return AuthRepositoryImpl(
-        authDataSource: ref.watch(authDataSourceProvider));
+    return AuthRepositoryImpl(authDataSource: ref.watch(authDataSourceProvider));
   },
 );
 
@@ -87,8 +86,7 @@ final deleteImageUseCaseProvider = Provider((ref) {
 });
 
 // Write ViewModel Provider
-final writeViewModelProvider =
-    NotifierProvider.autoDispose.family<WriteViewModel, WriteState, Feed?>(
+final writeViewModelProvider = NotifierProvider.autoDispose.family<WriteViewModel, WriteState, Feed>(
   () => WriteViewModel(),
 );
 
@@ -100,8 +98,7 @@ final firestoreProvider = Provider<FirebaseFirestore>((ref) {
 });
 
 // DataSource
-final commentRemoteDataSourceProvider =
-    Provider<CommentRemoteDataSource>((ref) {
+final commentRemoteDataSourceProvider = Provider<CommentRemoteDataSource>((ref) {
   return CommentRemoteDataSourceImpl(ref.watch(firestoreProvider));
 });
 
@@ -120,7 +117,6 @@ final addCommentUseCaseProvider = Provider<AddCommentUseCase>((ref) {
 });
 
 // ViewModel (family)
-final commentViewModelProvider =
-    NotifierProvider.autoDispose.family<CommentViewModel, CommentState, String>(
+final commentViewModelProvider = NotifierProvider.autoDispose.family<CommentViewModel, CommentState, String>(
   () => CommentViewModel(),
 );

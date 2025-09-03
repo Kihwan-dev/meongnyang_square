@@ -38,8 +38,8 @@ class _FeedPageState extends State<FeedPage> {
 
   // 예시 페이지를 5개 단위로 추가하기 위한 상태
   static const int exampleBatchSize = 5; // 한 번에 붙일 예시 개수
-  int exampleBatchCount = 1;             // 현재 예시 배치 수 (기본 5개)
-  bool isAppendingExamples = false;      // 예시 추가 중 중복 트리거 방지
+  int exampleBatchCount = 1; // 현재 예시 배치 수 (기본 5개)
+  bool isAppendingExamples = false; // 예시 추가 중 중복 트리거 방지
   bool readyToAppendExamples = false; // 바닥에 닿은 뒤 손을 뗄 때 5개 추가
   bool recentlyAppendedExamples = false; // 한 번의 끌어당김 동작당 1회만 추가
 
@@ -102,18 +102,20 @@ class _FeedPageState extends State<FeedPage> {
   // WritePage로 화면 전환
   // RouteSettings.arguments로 단일 Feed 객체를 전달
   // feed가 null인 경우에는 WritePage에서 빈 상태로 처리하도록 넘김
-  Future<void> _openWritePage(Feed? feed) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => WritePage(),
-        settings: RouteSettings(
-          arguments: {
-            'feed': feed,
-          },
-        ),
-      ),
-    );
-  }
+
+  // TODO
+  // Future<void> _openWritePage(Feed? feed) async {
+  //   await Navigator.of(context).push(
+  //     MaterialPageRoute(
+  //       builder: (_) => WritePage(),
+  //       settings: RouteSettings(
+  //         arguments: {
+  //           'feed': feed,
+  //         },
+  //       ),
+  //     ),
+  //   );
+  // }
 
   // CommentPage로 화면 전환
   // postId에는 feed.id를 그대로 전달
@@ -167,7 +169,7 @@ class _FeedPageState extends State<FeedPage> {
     // 2) 피드가 하나도 없으면 null을 전달하고 종료
     if (items.isEmpty) {
       _logWriteArguments(null, 0);
-      await _openWritePage(null);
+      // await _openWritePage(null);
       return;
     }
 
@@ -179,7 +181,7 @@ class _FeedPageState extends State<FeedPage> {
     _logWriteArguments(currentFeed, currentIndex);
 
     // 5) 화면 전환: 현재 피드만 arguments로 전달
-    await _openWritePage(currentFeed);
+    // await _openWritePage(currentFeed);
   }
 
   Future<void> onPageSwipe(int page) async {
@@ -235,8 +237,7 @@ class _FeedPageState extends State<FeedPage> {
       return Image.network(
         path,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) =>
-            const Image(image: fallback, fit: BoxFit.cover),
+        errorBuilder: (_, __, ___) => const Image(image: fallback, fit: BoxFit.cover),
       );
     }
     if (path.startsWith('assets/')) {
@@ -247,8 +248,7 @@ class _FeedPageState extends State<FeedPage> {
       return Image.file(
         file,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) =>
-            const Image(image: fallback, fit: BoxFit.cover),
+        errorBuilder: (_, __, ___) => const Image(image: fallback, fit: BoxFit.cover),
       );
     }
     return const Image(image: fallback, fit: BoxFit.cover);
@@ -260,8 +260,7 @@ class _FeedPageState extends State<FeedPage> {
     return Stack(
       children: [
         Positioned.fill(child: background),
-        Positioned.fill(
-            child: Container(color: Colors.black.withOpacity(0.30))),
+        Positioned.fill(child: Container(color: Colors.black.withOpacity(0.30))),
         SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(30),
@@ -270,9 +269,7 @@ class _FeedPageState extends State<FeedPage> {
                 FeedTop(createdAt: feed.createdAt),
                 const SizedBox(height: 16),
                 FeedCenter(
-                  title: (feed.tag != null && feed.tag!.trim().isNotEmpty)
-                      ? '#${feed.tag!.trim()}'
-                      : null,
+                  title: (feed.tag != null && feed.tag!.trim().isNotEmpty) ? '#${feed.tag!.trim()}' : null,
                   content: feed.content ?? '',
                 ),
                 const SizedBox(height: 16),

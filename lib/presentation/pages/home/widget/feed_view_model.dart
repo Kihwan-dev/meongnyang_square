@@ -22,19 +22,19 @@ class _FeedViewModelPageState extends State<FeedViewModelPage> {
   List<Feed> getFeedList() => items;
 
   /// WritePage로 이동 RouteSettings.arguments에 단일 Feed를 전달
-  Future<void> _openWritePage(Feed? feed) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => WritePage(),
-        // 현재 페이지의 Feed 하나만 전달
-        settings: RouteSettings(
-          arguments: {
-            'feed': feed,
-          },
-        ),
-      ),
-    );
-  }
+  // Future<void> _openWritePage(Feed? feed) async {
+  //   await Navigator.of(context).push(
+  //     MaterialPageRoute(
+  //       builder: (context) => WritePage(),
+  //       // 현재 페이지의 Feed 하나만 전달
+  //       settings: RouteSettings(
+  //         arguments: {
+  //           'feed': feed,
+  //         },
+  //       ),
+  //     ),
+  //   );
+  // }
 
   /// CommentPage로 이동 postId와 함께 authId, feedId를 arguments로 전달
   Future<void> _openCommentPage(Feed feed) async {
@@ -79,7 +79,7 @@ class _FeedViewModelPageState extends State<FeedViewModelPage> {
     // 2) 비어 있으면 null 전달 후 종료
     if (feedList.isEmpty) {
       _logWriteArguments(null, 0);
-      await _openWritePage(null);
+      // await _openWritePage(null);
       return;
     }
 
@@ -91,14 +91,14 @@ class _FeedViewModelPageState extends State<FeedViewModelPage> {
     _logWriteArguments(currentFeed, currentIndex);
 
     // 5) 화면 전환
-    await _openWritePage(currentFeed);
+    // await _openWritePage(currentFeed);
   }
 
   // 카드별(개별 아이템)을 WritePage로 이동
   Future<void> _goToWriteWithFeed(Feed feed) async {
     // 선택된 피드 정보를 로그로 출력
     _logWriteArguments(feed, _currentIndex);
-    await _openWritePage(feed);
+    // await _openWritePage(feed);
   }
 
   Future<void> _goToCommentWithFeed(Feed feed) async {

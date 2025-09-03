@@ -11,29 +11,22 @@ class FeedBottom extends StatelessWidget {
     this.onWritePressed,
     this.onCommentPressed,
   });
-  const FeedBottom({super.key, required this.postId});
-  final String? postId;
-
 
   @override
   Widget build(BuildContext context) {
-
-    final canOpenComment = postId != null && postId!.isNotEmpty;
-
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         GestureDetector(
           onTap: () {
-
             if (onWritePressed != null) {
               onWritePressed!.call();
               return;
             }
             // 기본 동작: WritePage로 이동
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => WritePage()),
-            );
+            // Navigator.of(context).push(
+            //   MaterialPageRoute(builder: (context) => WritePage()),
+            // );
           },
           child: Container(
             padding: EdgeInsets.all(12),
@@ -58,7 +51,7 @@ class FeedBottom extends StatelessWidget {
                 builder: (context) => CommentPage(postId: ''), // 기본값 전달
               ),
 
-            // final id = postId!;
+              // final id = postId!;
             );
           },
           child: Container(

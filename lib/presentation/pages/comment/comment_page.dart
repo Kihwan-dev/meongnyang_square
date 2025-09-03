@@ -1,28 +1,32 @@
 import 'dart:ui';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:meongnyang_square/presentation/pages/comment/comment_view_model.dart';
+import 'package:meongnyang_square/presentation/providers.dart';
 
-class CommentPage extends StatefulWidget {
+class CommentPage extends ConsumerStatefulWidget {
   final String postId;
   const CommentPage({super.key, required this.postId});
 
   @override
-  State<CommentPage> createState() => _CommentPageState();
+  ConsumerState<CommentPage> createState() => _CommentPageState();
 }
 
-class _CommentPageState extends State<CommentPage> {
+class _CommentPageState extends ConsumerState<CommentPage> {
   final commentController = TextEditingController();
   final textFieldFocus = FocusNode();
 
-  CollectionReference<Map<String, dynamic>> get _col =>
-      FirebaseFirestore.instance
-          .collection('feeds')
-          .doc(widget.postId)
-          .collection('comments');
+  @override
+  void initState() {
+    super.initState();
+    textFieldFocus.addListener(() => setState(() {}));
 
-  Stream<QuerySnapshot<Map<String, dynamic>>> get _commentStream =>
-      _col.orderBy('createdAt', descending: true).snapshots();
+    // 뷰모델 초기화 (작성자 조회 + 댓글 스트림 구독)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(commentViewModelProvider(widget.postId).notifier).init();
+    });
+  }
 
   @override
   void dispose() {
@@ -56,6 +60,9 @@ class _CommentPageState extends State<CommentPage> {
 
   @override
   Widget build(BuildContext context) {
+    final vm = ref.watch(commentViewModelProvider(widget.postId));
+    final notifier = ref.read(commentViewModelProvider(widget.postId).notifier);
+
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -69,51 +76,135 @@ class _CommentPageState extends State<CommentPage> {
             onPressed: () => Navigator.of(context).maybePop(),
           ),
         ),
+          padding: EdgeInsets.all(8.0),
+          child: IconButton(
+            icon: Image.asset(
+              'assets/images/icon_back.png',
+            ),
+            onPressed: () => Navigator.of(context).maybePop(),
+          ),
+        ),
         centerTitle: true,
         title: Image.asset('assets/images/logo_s.png', width: 40, height: 20),
       ),
-      body: _getScreen(context, bottomInset),
+      body: Container(
+        height: double.infinity,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: const AssetImage("assets/images/sample01.png"),
+            fit: BoxFit.fitHeight,
+            colorFilter: ColorFilter.mode(
+              Colors.black.withValues(alpha: 0.7),
+              BlendMode.darken,
+            ),
+          ),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("comments",
+                        style: TextStyle(color: Colors.white)),
+                    const SizedBox(height: 20),
+                    Expanded(child: _buildCommentList(vm)),
+                  ],
+                ),
+              ),
+            ),
+            _buildBottomTextField(bottomInset, notifier),
+          ],
+        ),
+      ),
     );
   }
 
-  Container _getScreen(BuildContext context, double bottomInset) {
-    return Container(
-      height: double.infinity,
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage("assets/images/sample01.png"),
-          fit: BoxFit.fitHeight,
-          colorFilter: ColorFilter.mode(
-            Colors.black.withValues(alpha: 0.7),
-            BlendMode.darken,
-          ),
+  Widget _buildCommentList(CommentState vm) {
+    if (vm.isLoading && vm.comments.isEmpty) {
+      return const Center(
+        child: SizedBox.square(
+          dimension: 32,
+          child: CircularProgressIndicator(strokeWidth: 2),
         ),
-      ),
-      child: Column(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.all(20),
+      );
+    }
+    if (vm.error != null) {
+      return Center(
+        child: Text('오류 : ${vm.error}',
+            style: const TextStyle(color: Colors.white)),
+      );
+    }
+    if (vm.comments.isEmpty) {
+      return const Center(
+        child: Text('첫 댓글을 남겨보세요!', style: TextStyle(color: Colors.white70)),
+      );
+    }
+
+    return ListView.separated(
+      padding: EdgeInsets.zero,
+      itemCount: vm.comments.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final c = vm.comments[index];
+        final shownTime = c.createdAt ?? c.clientAt;
+
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.02),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withValues(alpha: 0.02),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.08),
+                  width: 1,
+                ),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // 줄바꿈 포함해 모두 보임 (maxLines 제한 X)
                   Text(
-                    "comments",
-                    style: TextStyle(color: Colors.white),
+                    c.text,
+                    softWrap: true,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      height: 1.3,
+                    ),
                   ),
-                  SizedBox(height: 20),
-                  Expanded(child: _getCommentList()),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Text(
+                      shownTime == null ? '보내는 중…' : _formatExact(shownTime),
+                      textAlign: TextAlign.end,
+                      style:
+                          TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
-          _getBottomTextField(bottomInset),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Padding _getBottomTextField(double bottomInset) {
+  Padding _buildBottomTextField(double bottomInset, CommentViewModel notifier) {
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
       child: ClipRRect(
@@ -171,9 +262,21 @@ class _CommentPageState extends State<CommentPage> {
                           autocorrect: true,
                         ),
                       ),
-                      const SizedBox(width: 20),
+                      SizedBox(width: 20),
                       GestureDetector(
-                        onTap: _send,
+                        onTap: () async {
+                          final err =
+                              await notifier.addComment(commentController.text);
+                          if (!mounted) return;
+                          if (err == null) {
+                            commentController.clear();
+                            FocusScope.of(context).unfocus();
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(err)),
+                            );
+                          }
+                        },
                         child: Container(
                           height: 48,
                           width: 48,
@@ -195,113 +298,11 @@ class _CommentPageState extends State<CommentPage> {
     );
   }
 
-  Widget _getCommentList() {
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: _commentStream,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(
-            child: SizedBox.square(
-              dimension: 32,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          );
-        }
-        if (snapshot.hasError) {
-          return Center(
-              child: Text('오류 : ${snapshot.error}',
-                  style: TextStyle(color: Colors.white)));
-        }
-
-        final docs = snapshot.data?.docs ?? [];
-        if (docs.isEmpty) {
-          return Center(
-            child:
-                Text('첫 댓글을 남겨보세요!', style: TextStyle(color: Colors.white70)),
-          );
-        }
-
-        return ListView.separated(
-          padding: EdgeInsets.zero,
-          itemCount: docs.length,
-          separatorBuilder: (context, index) => SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            final data = docs[index].data();
-            final text = (data['text'] ?? '') as String;
-
-            // createdAt(서버) 없으면 clientAt(로컬) 사용
-            DateTime? createdAt;
-            final ts = data['createdAt'];
-            if (ts is Timestamp) createdAt = ts.toDate();
-            final clientAt = data['clientAt'];
-            DateTime? clientDt;
-            if (clientAt is Timestamp) clientDt = clientAt.toDate();
-            if (clientAt is DateTime) clientDt = clientAt;
-
-            final shownTime = createdAt ?? clientDt;
-
-            return ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.02),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.white.withValues(alpha: 0.02),
-                        blurRadius: 16,
-                        offset: Offset(0, 6),
-                      ),
-                    ],
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      width: 1,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        text,
-                        softWrap: true,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          height: 1.3,
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: Text(
-                          shownTime == null
-                              ? '보내는 중…' // 서버 타임스탬프 들어오기 전
-                              : _formatExact(shownTime),
-                          textAlign: TextAlign.end,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.7),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   String _formatExact(DateTime dt) {
     final f = DateFormat('yyyy.MM.dd HH:mm');
     return f.format(dt);
   }
-
+}
 /*
   String _formatTime(DateTime dt) {
     final now = DateTime.now();
@@ -313,4 +314,3 @@ class _CommentPageState extends State<CommentPage> {
   }
 
   */
-}

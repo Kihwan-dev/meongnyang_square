@@ -10,6 +10,16 @@ import 'package:meongnyang_square/data/dtos/feed_dto.dart';
 import 'package:meongnyang_square/data/data_sources/feed_remote_data_source_impl.dart';
 
 class WritePage extends StatefulWidget {
+  // 현재 피드 인덱스와 기존 피드 데이터를 선택적으로 전달받는다.
+  final int? currentFeedIndex; // 현재 피드 인덱스 (없을 수 있음)
+  final FeedDto? initialFeed;  // 기존 피드 데이터 (없을 수 있음)
+
+  const WritePage({
+    Key? key,
+    this.currentFeedIndex,
+    this.initialFeed,
+  }) : super(key: key);
+
   @override
   State<WritePage> createState() => _WritePageState();
 }
@@ -24,6 +34,34 @@ class _WritePageState extends State<WritePage> {
 
   Uint8List? _croppedImage;
   bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // initialFeed가 전달된 경우 태그와 내용을 미리 채운다.
+    final FeedDto? feed = widget.initialFeed;
+    if (feed != null) {
+      if (feed.tag != null) {
+        tagController.text = feed.tag!.trim();
+      }
+      if (feed.content != null) {
+        contentController.text = feed.content!.trim();
+      }
+    }
+    // -----------------------------
+    // 전달 데이터 확인용 디버그 로그 (개발 중 확인 후 제거 권장)
+    // -----------------------------
+    debugPrint('WritePage 진입 - currentFeedIndex: ${widget.currentFeedIndex}');
+    if (feed != null) {
+      debugPrint('WritePage 진입 - initialFeed.id: ${feed.id}');
+      debugPrint('WritePage 진입 - initialFeed.createdAt: ${feed.createdAt}');
+      debugPrint('WritePage 진입 - initialFeed.tag: ${feed.tag}');
+      debugPrint('WritePage 진입 - initialFeed.content: ${feed.content}');
+      debugPrint('WritePage 진입 - initialFeed.imagePath: ${feed.imagePath}');
+    } else {
+      debugPrint('WritePage 진입 - initialFeed: null');
+    }
+  }
 
   void _showSnack(String message) {
     if (!mounted) return;
@@ -186,13 +224,13 @@ class _WritePageState extends State<WritePage> {
         imagePath = file.path; // 로컬 경로 전달 → DataSource에서 Storage 업로드
       }
 
-      // 2) DTO 구성
+      // 2) DTO 구성 (수정/신규 공용) - initialFeed가 있으면 기존 id/createdAt 유지
       final dto = FeedDto(
-        id: null,              // 새 문서 → DataSource에서 id 세팅
-        createdAt: null,       // 서버 타임스탬프 사용
+        id: widget.initialFeed?.id,
+        createdAt: widget.initialFeed?.createdAt,
         tag: tag,
         content: content,
-        imagePath: imagePath,  // 없으면 null 저장
+        imagePath: imagePath,  // 새 이미지가 없으면 null → DataSource에서 기존 이미지 유지 처리 권장
       );
 
       // 3) 저장 실행 (타임아웃 방지)

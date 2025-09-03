@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:meongnyang_square/domain/entities/feed.dart';
 import 'package:meongnyang_square/data/dtos/feed_dto.dart';
 import 'package:meongnyang_square/presentation/pages/comment/comment_page.dart';
 import 'package:meongnyang_square/presentation/pages/home/widget/feed_bottom.dart';
@@ -17,7 +18,7 @@ class FeedPage extends StatefulWidget {
     this.onRefresh,
   });
 
-  final List<FeedDto>? feeds; // ViewModel/부모에서 전달
+  final List<Feed>? feeds; // ViewModel/부모에서 전달
   final Future<void> Function()? onEndReached; // 끝에 닿으면 추가 로드 요청
   final bool isLoadingMore; // 하단 로딩 표시 제어
   final bool hasMore; // 더 불러올 데이터가 있는지
@@ -78,15 +79,53 @@ class _FeedPageState extends State<FeedPage> {
     }
   }
 
+  Future<void> _goToWriteWithCurrentFeed() async {
+    // 1) 현재 세로 페이지 인덱스 계산
+    int currentIndex = 0;
+    if (verticalController.hasClients) {
+      final double? pageValue = verticalController.page;
+      if (pageValue != null) {
+        currentIndex = pageValue.round();
+      }
+    }
+
+    // 2) 현재 인덱스의 피드를 안전하게 가져오기
+    final List<Feed> items = widget.feeds ?? const <Feed>[];
+    if (items.isEmpty) {
+      // 데이터가 없으면 파라미터 없이 이동(기존 동작 유지)
+      await Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const WritePage()),
+      );
+      return;
+    }
+    if (currentIndex < 0) currentIndex = 0;
+    if (currentIndex >= items.length) currentIndex = items.length - 1;
+    final Feed currentFeed = items[currentIndex];
+
+    // 3) WritePage로 이동 (현재 인덱스 + 피드 전체 데이터 전달)
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => WritePage(
+          currentFeedIndex: currentIndex,
+          initialFeed: FeedDto(
+            id: currentFeed.id,
+            createdAt: currentFeed.createdAt,
+            tag: currentFeed.tag,
+            content: currentFeed.content,
+            imagePath: currentFeed.imagePath,
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> onPageSwipe(int page) async {
     if (page == 1) return;
     if (isSwiping) return;
     isSwiping = true;
 
     if (page == 0) {
-      await Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => WritePage()),
-      );
+      await _goToWriteWithCurrentFeed();
     } else if (page == 2) {
       await Navigator.of(context).push(
         MaterialPageRoute(builder: (context) => CommentPage()),
@@ -131,7 +170,7 @@ class _FeedPageState extends State<FeedPage> {
   }
 
   // 단일 포스트 빌더
-  Widget _buildPost(FeedDto feed) {
+  Widget _buildPost(Feed feed) {
     final background = _buildBackground(feed.imagePath);
     return Stack(
       children: [
@@ -151,7 +190,11 @@ class _FeedPageState extends State<FeedPage> {
                   content: feed.content ?? '',
                 ),
                 const SizedBox(height: 16),
-                const FeedBottom(),
+                FeedBottom(
+                  onWritePressed: () async {
+                    await _goToWriteWithCurrentFeed();
+                  },
+                ),
               ],
             ),
           ),
@@ -195,7 +238,7 @@ class _FeedPageState extends State<FeedPage> {
   }
 
   Widget _buildCenterPage() {
-    final List<FeedDto> items = widget.feeds ?? const <FeedDto>[];
+    final List<Feed> items = widget.feeds ?? const <Feed>[];
     final bool hasRealItems = items.isNotEmpty;
     final int exampleTail = widget.hasMore ? 0 : exampleBatchCount * exampleBatchSize; // 더 없음 → 예시 꼬리(배치)
     final int itemCount = hasRealItems ? (items.length + exampleTail) : (exampleBatchCount * exampleBatchSize);

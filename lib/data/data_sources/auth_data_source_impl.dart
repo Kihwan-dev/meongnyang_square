@@ -18,4 +18,9 @@ class AuthDataSourceImpl implements AuthDataSource {
       email: email, password: password,
     );
   }
+
+  @override
+  Future<void> logout() {
+    return auth.signOut();
+  }
 }

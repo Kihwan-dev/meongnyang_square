@@ -66,6 +66,12 @@ class AuthViewModel extends Notifier<AuthState> {
     );
   }
 
+  //로그아웃
+  Future<void> logout() async {
+    await authRepository.logout();
+    state = AuthState(user: null, isUser: true, isLoading: false);
+  }
+
 }
 
 final authViewModelProvider =

@@ -49,7 +49,7 @@ class _AuthFormState extends ConsumerState<AuthForm> {
           .read(authViewModelProvider.notifier)
           .login(emailController.text, pwController.text);
       if (!mounted) return;
-      context.go('/homepage');
+      context.go('/home');
     } catch (e) {
       emailController.clear();
       pwController.clear();
@@ -65,7 +65,7 @@ class _AuthFormState extends ConsumerState<AuthForm> {
           .read(authViewModelProvider.notifier)
           .join(emailController.text, pwController.text);
       if (!mounted) return;
-      context.go('/homepage');
+      context.go('/home');
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
         showErrorPopup(message: '이미 사용중인 이메일입니다.');

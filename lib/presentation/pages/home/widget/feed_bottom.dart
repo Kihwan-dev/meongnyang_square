@@ -14,7 +14,7 @@ class FeedBottom extends StatelessWidget {
         GestureDetector(
           onTap: () {
             //write페이지로 이동!
-            context.go("/home/Writepage", extra: feed);
+            context.go("/home/write", extra: feed);
           },
           child: Container(
             padding: EdgeInsets.all(12),

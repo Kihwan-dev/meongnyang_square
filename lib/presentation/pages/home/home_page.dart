@@ -64,6 +64,11 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Scaffold(
       body: PageView.builder(
         scrollDirection: Axis.vertical,
+        onPageChanged: (value) {
+          if (value >= feeds.length - 2) {
+            homeViewModel.fetchMore();
+          }
+        },
         itemCount: feeds.length,
         itemBuilder: (context, index) {
           final feed = feeds[index];

@@ -18,11 +18,11 @@ final router = GoRouter(
       builder: (context, state) => SplashPage(),
       routes: [
         GoRoute(
-          path: 'home',
+          path: '/home',
           builder: (context, state) => const HomePage(),
           routes: [
             GoRoute(
-              path: 'write',
+              path: '/write',
               builder: (context, state) {
                 final feed = state.extra as Feed;
                 return WritePage(feed);
@@ -35,7 +35,7 @@ final router = GoRouter(
               },
               routes: [
                 GoRoute(
-                  path: 'cropper',
+                  path: '/cropper',
                   name: 'cropper',
                   builder: (context, state) {
                     return CropperWidget(file: state.extra as File);
@@ -44,7 +44,7 @@ final router = GoRouter(
               ],
             ),
             GoRoute(
-              path: 'comment',
+              path: '/comment',
               builder: (context, state) {
                 final extra = state.extra as Map<String, String>;
                 return CommentPage(

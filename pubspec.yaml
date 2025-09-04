@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.8.1
+  sdk: ^3.4.1
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -39,6 +39,15 @@ dependencies:
   dio: ^5.9.0
   intl: ^0.20.2
   cached_network_image: ^3.4.1
+  google_sign_in: ^6.3.0
+  firebase_core: ^4.0.0
+  firebase_storage: ^13.0.0
+  firebase_auth: ^6.0.1
+  cloud_firestore: ^6.0.0
+  image_picker: ^1.2.0
+  image: ^4.5.4
+  flutter_local_notifications: ^19.4.1
+  go_router: ^16.2.1
 
 dev_dependencies:
   flutter_test:
@@ -67,6 +76,7 @@ flutter:
   assets:
     - assets/config/
     - assets/images/
+  
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -79,17 +89,27 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
+  fonts:
+    - family: SCDream
+      fonts:
+        - asset: assets/fonts/SCDream1.otf
+          weight: 100
+        - asset: assets/fonts/SCDream2.otf
+          weight: 200
+        - asset: assets/fonts/SCDream3.otf
+          weight: 300
+        - asset: assets/fonts/SCDream4.otf
+          weight: 400
+        - asset: assets/fonts/SCDream5.otf
+          weight: 500
+        - asset: assets/fonts/SCDream6.otf
+          weight: 600
+        - asset: assets/fonts/SCDream7.otf
+          weight: 700
+        - asset: assets/fonts/SCDream8.otf
+          weight: 800
+        - asset: assets/fonts/SCDream9.otf
+          weight: 900
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

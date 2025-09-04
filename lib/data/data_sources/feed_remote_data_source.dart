@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:meongnyang_square/data/dtos/feed_dto.dart';
 
 /// 원격 저장소(Firestore/Storage) 접근을 담당하는 DataSource 인터페이스
@@ -11,5 +12,10 @@ abstract interface class FeedRemoteDataSource {
   Stream<List<Map<String, dynamic>>> watchFeeds({
     int limit = 30,
     bool oldestFirst = true,
+  });
+
+  Future<(List<FeedDto>, DocumentSnapshot?)> fetchFeeds({
+    int limit,
+    DocumentSnapshot? lastDoc,
   });
 }

@@ -3,12 +3,12 @@
 // import 'package:meongnyang_square/presentation/pages/write/write_page.dart';
 // import 'package:meongnyang_square/presentation/pages/comment/comment_page.dart';
 
-// class FeedViewModelPage extends StatefulWidget {
+// class OriginFeedViewModelPage extends StatefulWidget {
 //   @override
-//   _FeedViewModelPageState createState() => _FeedViewModelPageState();
+//   _OriginFeedViewModelPageState createState() => _OriginFeedViewModelPageState();
 // }
 
-// class _FeedViewModelPageState extends State<FeedViewModelPage> {
+// class _OriginFeedViewModelPageState extends State<OriginFeedViewModelPage> {
 //   List<Feed> items = [];
 
 //   // 현재 화면에서 보이는(가장 가까운) 아이템 인덱스

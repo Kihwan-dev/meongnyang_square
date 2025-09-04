@@ -1,6 +1,8 @@
 import 'dart:typed_data';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:meongnyang_square/data/data_sources/feed_remote_data_source.dart';
 import 'package:meongnyang_square/data/dtos/feed_dto.dart';
+import 'package:meongnyang_square/domain/entities/feed.dart';
 import 'package:meongnyang_square/domain/repositories/feed_repository.dart';
 import 'package:meongnyang_square/domain/use_cases/feed_params.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -37,5 +39,26 @@ class FeedRepositoryImpl implements FeedRepository {
     if (!result) {
       throw Exception("Feed 저장 실패");
     }
+  }
+
+  @override
+  Future<(List<Feed>, DocumentSnapshot?)> fetchFeeds({
+    int limit = 10,
+    DocumentSnapshot? lastDoc,
+  }) async {
+    final (dtos, lastDocOut) = await _feedRemoteDataSource.fetchFeeds(limit: limit, lastDoc: lastDoc);
+    final entities = dtos
+        .map(
+          (e) => Feed(
+            authorId: e.authorId ?? "",
+            content: e.content ?? "",
+            createdAt: e.createdAt ?? DateTime.now(),
+            id: e.id ?? "",
+            imagePath: e.imagePath ?? "",
+            tag: e.tag ?? "",
+          ),
+        )
+        .toList();
+    return (entities, lastDocOut);
   }
 }

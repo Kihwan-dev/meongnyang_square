@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:meongnyang_square/core/utils/debouncer.dart';
 import 'package:meongnyang_square/domain/entities/feed.dart';
+import 'package:meongnyang_square/presentation/pages/splash/auth_view_model.dart';
 import 'package:meongnyang_square/presentation/pages/write/write_widgets/cropper_widget.dart';
 import 'package:meongnyang_square/presentation/providers.dart';
-import 'write_widgets/write_widget.dart';
+import 'write_widgets/tag_and_content_card.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class WritePage extends ConsumerStatefulWidget {
@@ -22,6 +24,8 @@ class WritePage extends ConsumerStatefulWidget {
 class _WritePageState extends ConsumerState<WritePage> {
   late final TextEditingController tagController;
   late final TextEditingController contentController;
+  Debouncer? debouncer;
+  bool _isInitialized = false;
 
   static const int maximumLength = 200;
 
@@ -33,22 +37,103 @@ class _WritePageState extends ConsumerState<WritePage> {
   void initState() {
     super.initState();
 
-    tagController = TextEditingController(text: widget.feed.tag);
-    contentController = TextEditingController(text: widget.feed.content);
+    tagController = TextEditingController();
+    contentController = TextEditingController();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 한 번만 초기화를 진행하기 위해서
+    if (!_isInitialized) {
+      final userId = ref.watch(authViewModelProvider).user?.uid;
+
+      // 수정 모드일 때만 기존 데이터로 초기화
+      if (userId != null && userId == widget.feed.authorId) {
+        tagController.text = widget.feed.tag;
+        contentController.text = widget.feed.content;
+
+        // debouncer도 수정 모드일 때만 생성
+        debouncer = Debouncer(
+          duration: const Duration(seconds: 2),
+          callback: () async {
+            final writeViewModel = ref.read(writeViewModelProvider(widget.feed).notifier);
+            final userId = ref.watch(authViewModelProvider).user!.uid;
+
+            String? message = await writeViewModel.autoSaveFeed(
+              imageData: _croppedImage,
+              tag: tagController.text,
+              content: contentController.text,
+              currentUserId: userId,
+            );
+
+            if (message != null) {
+              if (message != "") {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(message),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+                // 자동 저장 성공 시 HomePage 새로고침
+                ref.read(homeViewModelProvider.notifier).fetchFeeds();
+              }
+            }
+          },
+        );
+      }
+
+      _isInitialized = true;
+    }
   }
 
   @override
   void dispose() {
     tagController.dispose();
     contentController.dispose();
+    debouncer?.dispose();
     super.dispose();
+  }
+
+  // 태그 변경 처리
+  void _onTagChanged() {
+    print("onTagChanged");
+    if (debouncer == null) return;
+    print("onTagChanged");
+    final userId = ref.watch(authViewModelProvider).user!.uid;
+    if (userId != widget.feed.authorId) return;
+
+    final writeViewModel = ref.read(writeViewModelProvider(widget.feed).notifier);
+
+    if (tagController.text != widget.feed.tag) {
+      writeViewModel.setTagChanged(true);
+    }
+
+    debouncer!.run();
+  }
+
+  // 내용 변경 처리
+  void _onContentChanged() {
+    if (debouncer == null) return;
+    final userId = ref.watch(authViewModelProvider).user!.uid;
+    if (userId != widget.feed.authorId) return;
+
+    final writeViewModel = ref.read(writeViewModelProvider(widget.feed).notifier);
+
+    if (contentController.text != widget.feed.content) {
+      writeViewModel.setContentChanged(true);
+    }
+
+    debouncer!.run();
   }
 
   @override
   Widget build(BuildContext context) {
     final writeState = ref.watch(writeViewModelProvider(widget.feed));
     final writeViewModel = ref.read(writeViewModelProvider(widget.feed).notifier);
-
+    final homeViewModel = ref.read(homeViewModelProvider.notifier);
+    final currentUser = ref.watch(authViewModelProvider).user;
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -63,20 +148,11 @@ class _WritePageState extends ConsumerState<WritePage> {
           actions: [
             GestureDetector(
               onTap: () async {
-                final uid = FirebaseAuth.instance.currentUser?.uid;
-                if (uid == null) {
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('로그인이 필요합니다.')),
-                  );
-                  return;
-                }
-
                 String errorMessage = await writeViewModel.saveFeed(
                   imageData: _croppedImage,
                   tag: tagController.text,
                   content: contentController.text,
-                  authorId: uid,
+                  currentUserId: currentUser!.uid,
                 );
 
                 // print(writeState.errorMessage);
@@ -84,6 +160,7 @@ class _WritePageState extends ConsumerState<WritePage> {
                 if (!mounted) return;
 
                 if (errorMessage.isEmpty) {
+                  homeViewModel.fetchFeeds();
                   context.pop();
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -142,14 +219,14 @@ class _WritePageState extends ConsumerState<WritePage> {
                                     _croppedImage!,
                                     fit: BoxFit.cover,
                                   )
-                                : widget.feed == null
+                                : widget.feed.authorId != FirebaseAuth.instance.currentUser!.uid
                                     ? Image.asset(
                                         'assets/images/icon_photo.png',
                                         width: 35,
                                         height: 35,
                                       )
                                     : CachedNetworkImage(
-                                        imageUrl: widget.feed!.imagePath,
+                                        imageUrl: widget.feed.imagePath,
                                         fit: BoxFit.cover,
                                         placeholder: (context, url) => Center(
                                           child: CircularProgressIndicator(strokeWidth: 2),
@@ -164,6 +241,8 @@ class _WritePageState extends ConsumerState<WritePage> {
                           tagController: tagController,
                           contentController: contentController,
                           maximumLength: maximumLength,
+                          onTagChanged: _onTagChanged,
+                          onContentChanged: _onContentChanged,
                         ),
                       ),
                     ],
@@ -171,7 +250,7 @@ class _WritePageState extends ConsumerState<WritePage> {
                 ),
               ],
             ),
-            widget.feed == null
+            widget.feed.authorId != currentUser!.uid
                 ? Container()
                 : Positioned(
                     left: 24,
@@ -258,6 +337,8 @@ class _WritePageState extends ConsumerState<WritePage> {
       if (!mounted || croppedImage == null) return;
       setState(() {
         _croppedImage = croppedImage;
+        final writeViewModel = ref.read(writeViewModelProvider(widget.feed).notifier);
+        writeViewModel.setImageChanged(true);
       });
     } catch (e) {
       print(e);

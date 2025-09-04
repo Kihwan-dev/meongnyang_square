@@ -3,13 +3,13 @@
 // import 'package:flutter/material.dart';
 // import 'package:meongnyang_square/domain/entities/feed.dart';
 // import 'package:meongnyang_square/presentation/pages/comment/comment_page.dart';
-// import 'package:meongnyang_square/presentation/pages/home/widget/feed_bottom.dart';
-// import 'package:meongnyang_square/presentation/pages/home/widget/feed_center.dart';
-// import 'package:meongnyang_square/presentation/pages/home/widget/feed_top.dart';
+// import 'package:meongnyang_square/presentation/pages/home/widget/origin_feed_bottom.dart';
+// import 'package:meongnyang_square/presentation/pages/home/widget/origin_feed_center.dart';
+// import 'package:meongnyang_square/presentation/pages/home/widget/origin_feed_top.dart';
 // import 'package:meongnyang_square/presentation/pages/write/write_page.dart';
 
-// class FeedPage extends StatefulWidget {
-//   const FeedPage({
+// class OriginFeedPage extends StatefulWidget {
+//   const OriginFeedPage({
 //     super.key,
 //     this.feeds,
 //     this.onEndReached,
@@ -25,10 +25,10 @@
 //   final Future<void> Function()? onRefresh; // 당겨서 새로고침
 
 //   @override
-//   State<FeedPage> createState() => _FeedPageState();
+//   State<OriginFeedPage> createState() => _OriginFeedPageState();
 // }
 
-// class _FeedPageState extends State<FeedPage> {
+// class _OriginFeedPageState extends State<OriginFeedPage> {
 //   late PageController feedController; // 좌/우(쓰기/코멘트) 이동
 //   late PageController verticalController = PageController(); // 세로 스크롤 피드 이동
 //   bool isSwiping = false;
@@ -58,7 +58,7 @@
 //   }
 
 //   @override
-//   void didUpdateWidget(covariant FeedPage oldWidget) {
+//   void didUpdateWidget(covariant OriginFeedPage oldWidget) {
 //     super.didUpdateWidget(oldWidget);
 //     final newCount = widget.feeds?.length ?? 0;
 //     // 새 글이 추가되면 최신(맨 위)으로 이동
@@ -266,9 +266,9 @@
 //             padding: const EdgeInsets.all(30),
 //             child: Column(
 //               children: [
-//                 FeedTop(createdAt: feed.createdAt),
+//                 OriginFeedTop(createdAt: feed.createdAt),
 //                 const SizedBox(height: 16),
-//                 FeedCenter(
+//                 OriginFeedCenter(
 //                   title: (feed.tag != null && feed.tag!.trim().isNotEmpty) ? '#${feed.tag!.trim()}' : null,
 //                   content: feed.content ?? '',
 //                 ),
@@ -276,7 +276,7 @@
 //                 // 하단 액션 영역
 //                 // onWritePressed: 현재 화면에서 보고 있는 인덱스의 피드만 WritePage로 전달
 //                 // onCommentPressed: 탭한 카드의 feedId, authorId를 CommentPage로 전달
-//                 FeedBottom(
+//                 OriginFeedBottom(
 //                   // 글쓰기 아이콘 눌렀을 때 → WritePage로 이동
 //                   onWritePressed: () async {
 //                     await _goToWriteWithCurrentFeed();
@@ -324,11 +324,11 @@
 //           padding: const EdgeInsets.all(30),
 //           child: Column(
 //             children: [
-//               const FeedTop(),
+//               const OriginFeedTop(),
 //               const SizedBox(height: 16),
-//               const FeedCenter(),
+//               const OriginFeedCenter(),
 //               const SizedBox(height: 16),
-//               FeedBottom(
+//               OriginFeedBottom(
 //                 onWritePressed: () async {
 //                   await _goToWriteWithCurrentFeed();
 //                 },

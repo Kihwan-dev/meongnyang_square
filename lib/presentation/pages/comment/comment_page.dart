@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +9,12 @@ import 'package:meongnyang_square/presentation/providers.dart';
 
 class CommentPage extends ConsumerStatefulWidget {
   final String postId;
-  const CommentPage({super.key, required this.postId});
+  final String postPath;
+  const CommentPage({
+    super.key,
+    required this.postId,
+    required this.postPath,
+  });
 
   @override
   ConsumerState<CommentPage> createState() => _CommentPageState();
@@ -84,7 +90,7 @@ class _CommentPageState extends ConsumerState<CommentPage> {
         height: double.infinity,
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: const AssetImage("assets/images/sample01.png"),
+            image: CachedNetworkImageProvider(widget.postPath),
             fit: BoxFit.fitHeight,
             colorFilter: ColorFilter.mode(
               Colors.black.withValues(alpha: 0.7),

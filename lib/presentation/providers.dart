@@ -14,8 +14,10 @@ import 'package:meongnyang_square/domain/repositories/feed_repository.dart';
 import 'package:meongnyang_square/domain/repositories/storage_repository.dart';
 import 'package:meongnyang_square/domain/use_cases/delete_feed_use_case.dart';
 import 'package:meongnyang_square/domain/use_cases/delete_image_use_case.dart';
+import 'package:meongnyang_square/domain/use_cases/fetch_feeds_use_case.dart';
 import 'package:meongnyang_square/domain/use_cases/upload_image_use_case.dart';
 import 'package:meongnyang_square/domain/use_cases/upsert_feed_use_case.dart';
+import 'package:meongnyang_square/presentation/pages/home/home_view_model.dart';
 import 'package:meongnyang_square/presentation/pages/write/write_view_model.dart';
 import 'package:meongnyang_square/data/data_sources/comment_remote_data_source.dart';
 import 'package:meongnyang_square/data/data_sources/comment_remote_data_source_impl.dart';
@@ -88,6 +90,15 @@ final deleteImageUseCaseProvider = Provider((ref) {
 // Write ViewModel Provider
 final writeViewModelProvider = NotifierProvider.autoDispose.family<WriteViewModel, WriteState, Feed>(
   () => WriteViewModel(),
+);
+
+// Fetch Feeds
+final fetchFeedsUseCaseProvider = Provider((ref) {
+  return FetchFeedsUseCase(ref.watch(feedRepositoryProvider));
+});
+
+final homeViewModelProvider = NotifierProvider<HomeViewModel, HomeState>(
+  () => HomeViewModel(),
 );
 
 /* 댓글(Comment) 관련 */

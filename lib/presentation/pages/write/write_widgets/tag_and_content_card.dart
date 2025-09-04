@@ -6,11 +6,15 @@ class TagAndContentCard extends StatelessWidget {
     required this.tagController,
     required this.contentController,
     required this.maximumLength,
+    required this.onTagChanged,
+    required this.onContentChanged,
   });
 
   final TextEditingController tagController;
   final TextEditingController contentController;
   final int maximumLength;
+  final VoidCallback onTagChanged;
+  final VoidCallback onContentChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +48,7 @@ class TagAndContentCard extends StatelessWidget {
                     child: TextField(
                       controller: tagController,
                       style: const TextStyle(color: Colors.white),
+                      onChanged: (value) => onTagChanged(),
                       decoration: const InputDecoration(
                         hintText: '태그를 입력하세요',
                         hintStyle: TextStyle(color: Colors.white54),
@@ -59,6 +64,7 @@ class TagAndContentCard extends StatelessWidget {
                     controller: contentController,
                     maxLines: null,
                     style: const TextStyle(color: Colors.white),
+                    onChanged: (value) => onContentChanged(),
                     decoration: const InputDecoration(
                       hintText: '내용을 입력하세요',
                       hintStyle: TextStyle(color: Colors.white54),

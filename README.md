@@ -39,11 +39,11 @@ https://www.youtube.com/watch?v=xhipVlt6SVQ
 ## 🐶 프로젝트 개요 🐱
 ### 💡 강아지의 "멍", 고양이의 "냥", 사람들이 모여 소통하는 열린 공간 스퀘어
 - 혼자 기록하기보다, 같이 기록하는 즐거움을 주며 따뜻한 소통이 이루어지는 공간  
-- 원하는 순간에, 원하는 장소에서 누구나 반려동물의 일상을 공유  
+- 원하는 순간에 원하는 장소에서 누구나 반려동물의 일상을 공유  
 - 강아지와 고양이를 키우는 반려인들을 한 곳에 모아주는 커뮤니티  
 - 전체 페이지에 Clean Architecture 적용  
+- 상태관리는 Riverpod, 라우팅은 GoRouter
 - 앱 전역 에러를 에러 페이지에서 핸들링  
-- 상태관리는 Riverpod, 라우팅은 GoRouter  
 <br>
 
 ## 🔑 핵심 기능
@@ -120,17 +120,22 @@ https://www.youtube.com/watch?v=xhipVlt6SVQ
 ## 📱 App Screens & Features
 ### 1. Splash page  
 <div> 
-<img width="300" height="600" alt="Simulator Screenshot - iPhone 16 Pro - 2025-08-27 at 11 28 16" src="https://github.com/user-attachments/assets/f846da75-4cce-4c16-a47d-f17b6a5805c5" />
+<img width="200" height="400" alt="splash" src="https://github.com/user-attachments/assets/ec89122b-e72c-4ec4-8f17-82bbb14ba44e" />
+<img width="200" height="400" alt="login" src="https://github.com/user-attachments/assets/c82ca6c5-997c-42bf-8853-b92bacfcfb69" />
 </div> 
 <br>
 
 - 스플래시 애니메이션
 - 로그인 회원가입 폼
 - Firebase Auth 사용 (이메일 기반)
+<br>
 
 ### 2. Home Page 
 <div> 
-<img width="300" height="600" alt="Simulator Screenshot - iPhone 16 Pro - 2025-08-27 at 11 28 44" src="https://github.com/user-attachments/assets/0dd20cee-8a61-4d3e-b3b3-1ad0572ffa71" />
+<img width="200" height="400" alt="feed1" src="https://github.com/user-attachments/assets/acd6656e-5166-4dbe-9e1a-2147fcaf5d67" />
+<img width="200" height="400" alt="feed2" src="https://github.com/user-attachments/assets/c0ae0628-e41e-4387-801e-dea4849fc78a" />
+<img width="200" height="400" alt="feed3" src="https://github.com/user-attachments/assets/cf3196ca-de86-4ece-95e7-4be07eed8430" />
+<img width="200" height="400" alt="feed4" src="https://github.com/user-attachments/assets/ca718488-005f-4ffe-af3d-5d68a15ef241" />
 </div> 
 <br>
 
@@ -138,15 +143,28 @@ https://www.youtube.com/watch?v=xhipVlt6SVQ
 - feed는 10개씩 노출되며 추가적으로 무한스크롤
 - 게시글 가져오기: Firebase Firestore
 - 실시간 업데이트
+<br>
 
 ### 3. Write Page
+<div> 
+<img width="200" height="400" alt="write" src="https://github.com/user-attachments/assets/f5e1378d-d0ce-411b-b5aa-8210c6826df7" />
+</div> 
+<br>
+
 - 피드 작성 페이지
 - 사진 업로드 및 화면 비율에 맞게 편집 가능
 - 내가 작성한 피드일 경우 수정, 삭제 가능
 - 사진 업로드: Firebase Storage
 - 게시글 업로드: Firebase Firestore
+<br>
 
 ### 4. Comment Page
+<div> 
+<img width="200" height="400" alt="Screenshot_1757033199" src="https://github.com/user-attachments/assets/c3db3dc0-c745-491a-9ef9-afa5b59b3a76" />
+<img width="200" height="400" alt="Screenshot_1757033245" src="https://github.com/user-attachments/assets/50ef756d-4e98-4454-837e-33b5abfe3d2c" />
+</div> 
+<br>
+
 - 댓글확인/작성
 - 피드의 사진이 페이지 배경에 보이게 UI설계
 - 로컬 알림 구현
@@ -233,7 +251,7 @@ PageView 콜백으로 동기화
 스플래시 애니메이션 시작 전에 authStateChanges().first 이 실행, 바로 Home으로 라우팅  
 
 [해결방법]  
-세션체크(hasSession)와 로딩중(checkingSession)을 체크해서 분기를 나눔
+세션체크(hasSession)와 로딩중(checkingSession)을 체크해서 분기를 나눔  
 <br>
 
 ### 5. 플러그인 버전 불일치 (compileSdk 문제)
